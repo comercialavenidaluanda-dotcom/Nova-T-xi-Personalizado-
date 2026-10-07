@@ -1,4 +1,4 @@
-name: NOVA Taxi Android APK v6
+name: NOVA Taxi Android APK v7
 
 on:
   push:
@@ -43,7 +43,23 @@ jobs:
               a=section.find('            // Inserir perfil com role inicial PASSENGER')
               b=section.find('            _driverApprovalStatus.value = "PENDING"',a)
               if a>=0 and b>=0:
-                  block='''            val driverResponse = SupabaseNetworkClient.restApi.applyDriver(\n                mapOf(\n                    "p_document_number" to documentNumber.trim().uppercase(),\n                    "p_license_number" to licenseNumber.trim().uppercase(),\n                    "p_vehicle_brand" to vehicleBrand.trim(),\n                    "p_vehicle_model" to vehicleModel.trim(),\n                    "p_plate_number" to licensePlate.trim().uppercase(),\n                    "p_vehicle_color" to vehicleColor.trim(),\n                    "p_vehicle_year" to vehicleYear,\n                    "p_category" to "COOL"\n                )\n            )\n            if (!driverResponse.isSuccessful) {\n                return@withContext Result.failure(Exception("Não foi possível submeter a candidatura de motorista."))\n            }\n\n'''
+                  block='''            val driverResponse = SupabaseNetworkClient.restApi.applyDriver(
+                mapOf(
+                    "p_document_number" to documentNumber.trim().uppercase(),
+                    "p_license_number" to licenseNumber.trim().uppercase(),
+                    "p_vehicle_brand" to vehicleBrand.trim(),
+                    "p_vehicle_model" to vehicleModel.trim(),
+                    "p_plate_number" to licensePlate.trim().uppercase(),
+                    "p_vehicle_color" to vehicleColor.trim(),
+                    "p_vehicle_year" to vehicleYear,
+                    "p_category" to "COOL"
+                )
+            )
+            if (!driverResponse.isSuccessful) {
+                return@withContext Result.failure(Exception("Não foi possível submeter a candidatura de motorista."))
+            }
+
+'''
                   section=section[:a]+block+section[b:]
               s=s[:d]+section
           auth.write_text(s)
