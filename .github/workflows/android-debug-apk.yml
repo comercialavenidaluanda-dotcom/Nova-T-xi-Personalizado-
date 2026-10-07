@@ -1,4 +1,4 @@
-name: NOVA Táxi Android APK
+name: NOVA Taxi Android APK
 
 on:
   push:
@@ -10,70 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Prepare patched source
+      - name: Download source
         run: |
           curl -L --fail -o nova-taxi-source.zip https://raw.githubusercontent.com/comercialavenidaluanda-dotcom/Nova-T-xi-Personalizado-/main/nova-táxi.zip
           unzip -q nova-taxi-source.zip -d build-src
-          python3 - <<'PY'
-          from pathlib import Path
-          root=Path("build-src")
-          api=root/"app/src/main/java/com/example/core/network/SupabaseApiService.kt"
-          auth=root/"app/src/main/java/com/example/data/repository/AuthRepository.kt"
-          build=root/"app/build.gradle.kts"
-
-          s=api.read_text()
-          s=s.replace('data class SupabaseAuthSession(\n    @Json(name = "access_token") val accessToken: String,','data class SupabaseAuthSession(\n    @Json(name = "access_token") val accessToken: String? = null,')
-          if "suspend fun applyDriver(" not in s:
-              marker='    @POST("rest/v1/rpc/nova_calculate_fare_and_commission")\n    suspend fun rpcCalculateFareAndCommission(\n        @Body payload: NovaCalculateFarePayload\n    ): Response<NovaFareCalculationResponse>'
-              dto='''@JsonClass(generateAdapter = true)\ndata class NovaTaxiApplyDriverPayload(\n    @Json(name = "p_document_number") val documentNumber: String,\n    @Json(name = "p_license_number") val licenseNumber: String,\n    @Json(name = "p_vehicle_brand") val vehicleBrand: String,\n    @Json(name = "p_vehicle_model") val vehicleModel: String,\n    @Json(name = "p_plate_number") val plateNumber: String,\n    @Json(name = "p_vehicle_color") val vehicleColor: String,\n    @Json(name = "p_vehicle_year") val vehicleYear: Int,\n    @Json(name = "p_category") val category: String = "COOL"\n)\n\n'''
-              s=s.replace('// Legacy compatibility DTO\n',dto+'// Legacy compatibility DTO\n')
-              s=s.replace(marker,marker+'\n\n    @Headers("Prefer: return=representation")\n    @POST("rest/v1/rpc/nova_taxi_apply_driver")\n    suspend fun applyDriver(@Body payload: NovaTaxiApplyDriverPayload): Response<Unit>')
-          api.write_text(s)
-
-          s=auth.read_text()
-          s=s.replace('if (session.accessToken.isNotBlank()) {','if (!session.accessToken.isNullOrBlank()) {')
-          s=s.replace('SupabaseNetworkClient.setAuthToken(session.accessToken)','SupabaseNetworkClient.setAuthToken(session.accessToken!!)')
-          a=s.find('            // Inserir perfil na tabela nova_taxi_profiles')
-          b=s.find('            val user = User(',a)
-          if a>=0 and b>=0:
-              s=s[:a]+'            // Perfil criado pelo trigger seguro do Supabase.\n\n'+s[b:]
-          d=s.find('    override suspend fun registerDriver(')
-          if d>=0:
-              section=s[d:]
-              section=section.replace('data = mapOf("full_name" to name.trim(), "role" to "PASSENGER")','data = mapOf("full_name" to name.trim(), "role" to "DRIVER")',1)
-              a=section.find('            // Inserir perfil com role inicial PASSENGER')
-              b=section.find('            _driverApprovalStatus.value = "PENDING"',a)
-              if a>=0 and b>=0:
-                  block='''            val driverResponse = SupabaseNetworkClient.restApi.applyDriver(\n                NovaTaxiApplyDriverPayload(\n                    documentNumber = documentNumber.trim().uppercase(),\n                    licenseNumber = licenseNumber.trim().uppercase(),\n                    vehicleBrand = vehicleBrand.trim(),\n                    vehicleModel = vehicleModel.trim(),\n                    plateNumber = licensePlate.trim().uppercase(),\n                    vehicleColor = vehicleColor.trim(),\n                    vehicleYear = vehicleYear,\n                    category = "COOL"\n                )\n            )\n            if (!driverResponse.isSuccessful) {\n                return@withContext Result.failure(Exception("Não foi possível submeter a candidatura de motorista."))\n            }\n\n'''
-                  section=section[:a]+block+section[b:]
-              s=s[:d]+section
-          auth.write_text(s)
-
-          s=build.read_text().replace('versionCode = 1','versionCode = 2').replace('versionName = "1.0"','versionName = "1.0.1"')
-          build.write_text(s)
-          PY
           cd build-src
-          cat > .env <<'EOF'
-SUPABASE_URL=https://earucsaqqtbllnqsxvlb.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK
-EOF
-
+          printf 'SUPABASE_URL=https://earucsaqqtbllnqsxvlb.supabase.co\nSUPABASE_ANON_KEY=sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK\n' > .env
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - uses: android-actions/setup-android@v3
-
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
-
       - name: Build debug APK
         working-directory: build-src
         run: gradle assembleDebug --no-daemon
-
       - uses: actions/upload-artifact@v4
         with:
           name: nova-taxi-debug-apk-1.0.1
