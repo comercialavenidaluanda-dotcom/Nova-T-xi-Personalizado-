@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/android-debug-apk.yml'
+  workflow_dispatch:
 
 jobs:
   build-apk:
