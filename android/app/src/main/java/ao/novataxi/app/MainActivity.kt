@@ -122,7 +122,7 @@ private fun NovaTaxiApp() {
                 onClick = {
                     scope.launch {
                         try {
-                            supabase.auth.verifyPhoneOtp(type = OtpType.Phone.SMS, phoneNumber = phone, token = otp)
+                            supabase.auth.verifyPhoneOtp(type = OtpType.Phone.SMS, phone = phone, token = otp)
                             val uid = supabase.auth.currentUserOrNull()?.id ?: error("Sessão não criada")
                             supabase.from("nova_taxi_profiles").update(
                                 ProfileUpdate(nome = name.ifBlank { null }, tipo_utilizador = role)
