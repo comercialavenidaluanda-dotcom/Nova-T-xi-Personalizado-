@@ -1,9 +1,11 @@
-name: NOVA Taxi Android APK
+name: NOVA Taxi Android APK — DEBUG AUTO BUILD
+# Triggered by repository changes and manual dispatch.
 
 on:
   push:
     paths:
       - '.github/workflows/android-debug-apk.yml'
+      - 'nova-táxi.zip'
   workflow_dispatch:
 
 jobs:
