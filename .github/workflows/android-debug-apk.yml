@@ -22,13 +22,12 @@ jobs:
           mkdir -p build-src
           unzip -q "nova-táxi.zip" -d build-src
 
-          GRADLEW="$(find build-src -type f -name gradlew -print -quit)"
-          test -n "$GRADLEW"
-          BUILD_DIR="$(dirname "$GRADLEW")"
+          SETTINGS="$(find build-src -type f \( -name settings.gradle -o -name settings.gradle.kts \) -print -quit)"
+          test -n "$SETTINGS"
+          PROJECT_DIR="$(dirname "$SETTINGS")"
 
-          echo "BUILD_DIR=$BUILD_DIR" >> "$GITHUB_ENV"
-          echo "Android source found at: $BUILD_DIR"
-          chmod +x "$GRADLEW"
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Android project found at: $PROJECT_DIR"
 
       - name: Configure Supabase
         shell: bash
@@ -37,7 +36,7 @@ jobs:
           SUPABASE_ANON_KEY: sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK
         run: |
           set -e
-          printf "SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n" "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > "$BUILD_DIR/.env"
+          printf "SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n" "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > "$PROJECT_DIR/.env"
           {
             echo "SUPABASE_URL=$SUPABASE_URL"
             echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
@@ -58,13 +57,13 @@ jobs:
         shell: bash
         run: |
           set -e
-          "$BUILD_DIR/gradlew" -p "$BUILD_DIR" assembleDebug --no-daemon --stacktrace
+          gradle -p "$PROJECT_DIR" assembleDebug --no-daemon --stacktrace
 
       - name: Verify APK
         shell: bash
         run: |
           set -e
-          APK="$(find "$BUILD_DIR" -type f -path "*/build/outputs/apk/debug/*.apk" -print -quit)"
+          APK="$(find "$PROJECT_DIR" -type f -path "*/build/outputs/apk/debug/*.apk" -print -quit)"
           test -n "$APK"
           ls -lh "$APK"
           sha256sum "$APK"
@@ -73,6 +72,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nova-taxi-debug-apk-test
-          path: ${{ env.BUILD_DIR }}/**/build/outputs/apk/debug/*.apk
+          path: ${{ env.PROJECT_DIR }}/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7
