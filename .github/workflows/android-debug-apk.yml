@@ -32,7 +32,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "9.3.1"
+          gradle-version: "8.13"
 
       - name: Build debug APK
         run: gradle -p android assembleDebug --no-daemon --stacktrace
