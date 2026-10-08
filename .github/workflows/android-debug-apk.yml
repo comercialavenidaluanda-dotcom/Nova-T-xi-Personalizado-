@@ -17,7 +17,7 @@ jobs:
       - name: Configure Supabase publishable key
         shell: bash
         env:
-          SUPABASE_KEY: ${{ secrets.NOVA_TAXI_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_KEY: sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp
         run: |
           set -e
           test -n "$SUPABASE_KEY"
