@@ -137,3 +137,5 @@ jobs:
           name: nova-taxi-debug-apk-supabase
           path: build-src/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+# Manual build authorized by project owner: 2026-10-08T14:08:39.746Z
