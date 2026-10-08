@@ -21,8 +21,14 @@ jobs:
           rm -rf build-src
           mkdir -p build-src
           unzip -q "nova-táxi.zip" -d build-src
-          test -f build-src/gradlew
-          chmod +x build-src/gradlew
+
+          GRADLEW="$(find build-src -type f -name gradlew -print -quit)"
+          test -n "$GRADLEW"
+          BUILD_DIR="$(dirname "$GRADLEW")"
+
+          echo "BUILD_DIR=$BUILD_DIR" >> "$GITHUB_ENV"
+          echo "Android source found at: $BUILD_DIR"
+          chmod +x "$GRADLEW"
 
       - name: Configure Supabase
         shell: bash
@@ -31,7 +37,7 @@ jobs:
           SUPABASE_ANON_KEY: sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK
         run: |
           set -e
-          printf "SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n" "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > build-src/.env
+          printf "SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n" "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > "$BUILD_DIR/.env"
           {
             echo "SUPABASE_URL=$SUPABASE_URL"
             echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
@@ -49,23 +55,24 @@ jobs:
           gradle-version: "8.11.1"
 
       - name: Build debug APK
-        working-directory: build-src
         shell: bash
         run: |
           set -e
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          "$BUILD_DIR/gradlew" -p "$BUILD_DIR" assembleDebug --no-daemon --stacktrace
 
       - name: Verify APK
         shell: bash
         run: |
           set -e
-          ls -lh build-src/app/build/outputs/apk/debug/*.apk
-          sha256sum build-src/app/build/outputs/apk/debug/*.apk
+          APK="$(find "$BUILD_DIR" -type f -path "*/build/outputs/apk/debug/*.apk" -print -quit)"
+          test -n "$APK"
+          ls -lh "$APK"
+          sha256sum "$APK"
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: nova-taxi-debug-apk-test
-          path: build-src/app/build/outputs/apk/debug/*.apk
+          path: ${{ env.BUILD_DIR }}/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7
