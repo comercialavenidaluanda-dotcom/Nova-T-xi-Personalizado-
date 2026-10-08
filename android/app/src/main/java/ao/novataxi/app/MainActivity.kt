@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.KeyboardType
@@ -14,11 +15,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.OtpType
-import io.github.jan.supabase.auth.providers.Phone
-import io.github.jan.supabase.auth.signInWith
-import io.github.jan.supabase.auth.verifyPhoneOtp
+import io.github.jan.supabase.auth.providers.OTP
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.Serializable
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapView
@@ -58,6 +56,7 @@ private fun NovaTaxiApp() {
     var sent by remember { mutableStateOf(false) }
     var logged by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
     if (logged) {
         Column(Modifier.fillMaxSize()) {
@@ -105,9 +104,9 @@ private fun NovaTaxiApp() {
             Button(
                 onClick = {
                     message = "A enviar código..."
-                    kotlinx.coroutines.MainScope().launch {
+                    scope.launch {
                         try {
-                            supabase.auth.signInWith(Phone) { this.phone = phone }
+                            supabase.auth.signInWith(OTP) { this.phone = phone }
                             sent = true
                             message = "Código enviado. Verifique o SMS."
                         } catch (e: Exception) { message = e.message ?: "Falha ao enviar OTP" }
@@ -122,7 +121,7 @@ private fun NovaTaxiApp() {
                 onClick = {
                     kotlinx.coroutines.MainScope().launch {
                         try {
-                            supabase.auth.verifyPhoneOtp(type = OtpType.Phone.SMS, phone = phone, token = otp)
+                            supabase.auth.verifyPhoneOtp(type = OtpType.Phone.SMS, phoneNumber = phone, token = otp)
                             val uid = supabase.auth.currentUserOrNull()?.id ?: error("Sessão não criada")
                             supabase.from("nova_taxi_profiles").update(
                                 ProfileUpdate(nome = name.ifBlank { null }, tipo_utilizador = role)
