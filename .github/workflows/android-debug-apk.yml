@@ -3,8 +3,8 @@ name: NOVA Taxi Android APK
 on:
   push:
     paths:
+      - "android/**"
       - ".github/workflows/android-debug-apk.yml"
-      - "nova-táxi.zip"
   workflow_dispatch:
 
 jobs:
@@ -14,33 +14,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare Android source
-        shell: bash
-        run: |
-          set -e
-          rm -rf build-src
-          mkdir -p build-src
-          unzip -q "nova-táxi.zip" -d build-src
-
-          SETTINGS="$(find build-src -type f \( -name settings.gradle -o -name settings.gradle.kts \) -print -quit)"
-          test -n "$SETTINGS"
-          PROJECT_DIR="$(dirname "$SETTINGS")"
-
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "Android project found at: $PROJECT_DIR"
-
-      - name: Configure Supabase
+      - name: Configure Supabase publishable key
         shell: bash
         env:
-          SUPABASE_URL: https://earucsaqqtbllnqsxvlb.supabase.co
-          SUPABASE_ANON_KEY: sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK
+          SUPABASE_KEY: ${{ secrets.NOVA_TAXI_SUPABASE_PUBLISHABLE_KEY }}
         run: |
           set -e
-          printf "SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n" "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > "$PROJECT_DIR/.env"
-          {
-            echo "SUPABASE_URL=$SUPABASE_URL"
-            echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
-          } >> "$GITHUB_ENV"
+          test -n "$SUPABASE_KEY"
+          sed -i "s/%%SUPABASE_PUBLISHABLE_KEY%%/$SUPABASE_KEY/g" android/app/src/main/java/ao/novataxi/app/MainActivity.kt
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -54,16 +35,13 @@ jobs:
           gradle-version: "9.3.1"
 
       - name: Build debug APK
-        shell: bash
-        run: |
-          set -e
-          gradle -p "$PROJECT_DIR" assembleDebug --no-daemon --stacktrace
+        run: gradle -p android assembleDebug --no-daemon --stacktrace
 
       - name: Verify APK
         shell: bash
         run: |
           set -e
-          APK="$(find "$PROJECT_DIR" -type f -path "*/build/outputs/apk/debug/*.apk" -print -quit)"
+          APK="$(find android -type f -path "*/build/outputs/apk/debug/*.apk" -print -quit)"
           test -n "$APK"
           ls -lh "$APK"
           sha256sum "$APK"
@@ -71,7 +49,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: nova-taxi-debug-apk-test
-          path: ${{ env.PROJECT_DIR }}/**/build/outputs/apk/debug/*.apk
+          name: nova-taxi-debug-apk-tudoaqui
+          path: android/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7
