@@ -14,8 +14,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.OtpType
-import io.github.jan.supabase.auth.providers.OTP
+import io.github.jan.supabase.auth.providers.builtin.OTP
 import io.github.jan.supabase.postgrest.from
 import kotlinx.serialization.Serializable
 import org.maplibre.android.MapLibre
@@ -119,7 +120,7 @@ private fun NovaTaxiApp() {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome") }, modifier = Modifier.fillMaxWidth())
             Button(
                 onClick = {
-                    kotlinx.coroutines.MainScope().launch {
+                    scope.launch {
                         try {
                             supabase.auth.verifyPhoneOtp(type = OtpType.Phone.SMS, phoneNumber = phone, token = otp)
                             val uid = supabase.auth.currentUserOrNull()?.id ?: error("Sessão não criada")
