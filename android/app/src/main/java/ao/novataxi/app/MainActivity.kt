@@ -38,6 +38,9 @@ private val supabase = createSupabaseClient(
 @Serializable
 data class ProfileUpdate(val nome: String? = null, val tipo_utilizador: String)
 
+@Serializable
+data class DriverProfile(val id: String)
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,7 +128,7 @@ private fun NovaTaxiApp() {
                                 ProfileUpdate(nome = name.ifBlank { null }, tipo_utilizador = role)
                             ) { filter { eq("id", uid) } }
                             if (role == "motorista") {
-                                supabase.from("nova_taxi_driver_profiles").upsert(mapOf("id" to uid))
+                                supabase.from("nova_taxi_driver_profiles").upsert(DriverProfile(uid))
                             }
                             logged = true
                             message = "Sessão iniciada."
