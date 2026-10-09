@@ -10,7 +10,7 @@
 <div id="login" class="login">
 <div class="brand"><span class="logo">N</span><span>NOVA Táxi</span></div>
 <p class="muted">Painel administrativo · acesso restrito</p>
-<div class="warn">A autenticação utiliza Supabase Auth. Configure a chave pública do projeto no bloco de configuração deste ficheiro antes de publicar.</div>
+<div class="warn">A autenticação usa o Supabase Auth do projeto NOVA Táxi. Entre com o e-mail e a palavra-passe da conta autorizada.</div>
 <form id="form">
 <div class="field"><label for="email">E-mail do administrador</label><input id="email" type="email" autocomplete="username" required placeholder="E-mail autorizado"></div>
 <div class="field"><label for="password">Palavra-passe</label><input id="password" type="password" autocomplete="current-password" required></div>
@@ -27,13 +27,13 @@
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL='https://earucsaqqtbllnqsxvlb.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp';
-const $=id=>document.getElementById(id), clientReady=SUPABASE_PUBLISHABLE_KEY!=='sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp';
-const client=clientReady?createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK';
+const $=id=>document.getElementById(id), clientReady=Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY.startsWith('sb_publishable_'));
+const client=clientReady?createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
 function message(s){$('message').textContent=s}
 async function enter(session){
  if(!session)return;
- const {data:profile,error}=await client.from('nova_taxi_profiles').select('role,status').eq('id',session.user.id).maybeSingle();
+ const {data:profile,error}=await client.from('nova_taxi_profiles').select('role,status').eq('user_id',session.user.id).maybeSingle();
  if(error){await client.auth.signOut();message('Não foi possível validar o perfil administrador. Verifique a política RLS da tabela nova_taxi_profiles.');return}
  if(!profile||String(profile.role).toUpperCase()!=='ADMIN'||String(profile.status).toUpperCase()!=='ACTIVE'){await client.auth.signOut();message('Acesso recusado: perfil ADMIN ativo não encontrado.');return}
  $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('authStatus').textContent='Ligado';$('roleStatus').textContent='ADMIN ativo';
@@ -48,7 +48,7 @@ async function loadDashboard(){
  $('gpsStatus').textContent='Tabela configurada; transmissão não confirmada';$('payStatus').textContent=payments==='Sem acesso'?'Sem acesso':'Consulta disponível';
  try{const {data,error}=await client.from('nova_taxi_rides').select('id,status,created_at').order('created_at',{ascending:false}).limit(5);if(error)throw error;$('operations').innerHTML=data.length?data.map(r=>'<div class="row"><span>Corrida '+String(r.id).slice(0,8)+' · '+String(r.status??'estado desconhecido')+'</span><b>'+new Date(r.created_at).toLocaleString('pt-AO')+'</b></div>').join(''):'Sem corridas registadas.'}catch(e){$('operations').textContent='Não foi possível ler as corridas. Verifique as políticas RLS e permissões de leitura.'}
 }
-$('form').addEventListener('submit',async e=>{e.preventDefault();if(!clientReady){message('Falta configurar a chave publishable do Supabase neste ficheiro. Não introduza a palavra-passe até concluir esta configuração.');return}const b=$('submit');b.disabled=true;b.textContent='A validar…';message('');try{const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;await enter(data.session)}catch(e){message(e.message==='Invalid login credentials'?'Credenciais incorretas.':e.message||'Falha de autenticação.')}finally{b.disabled=false;b.textContent='Entrar com segurança'}});
+$('form').addEventListener('submit',async e=>{e.preventDefault();if(!clientReady){message('A ligação ao Supabase não está configurada. Contacte o administrador técnico.');return}const b=$('submit');b.disabled=true;b.textContent='A validar…';message('');try{const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;await enter(data.session)}catch(e){message(e.message==='Invalid login credentials'?'Credenciais incorretas.':e.message||'Falha de autenticação.')}finally{b.disabled=false;b.textContent='Entrar com segurança'}});
 $('logout').addEventListener('click',async()=>{if(client)await client.auth.signOut();$('dashboard').classList.add('hidden');$('login').classList.remove('hidden');$('password').value=''});
 if(client){const {data:{session}}=await client.auth.getSession();if(session)await enter(session)}
 </script></body></html>
