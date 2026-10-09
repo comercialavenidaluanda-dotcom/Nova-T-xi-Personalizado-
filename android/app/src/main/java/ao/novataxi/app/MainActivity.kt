@@ -28,6 +28,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.camera.CameraPosition
@@ -215,6 +217,10 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         supabase.auth.signUpWith(Email) {
                             this.email = email.trim()
                             this.password = password
+                            data = buildJsonObject {
+                                put("nome", name.trim())
+                                put("tipo_utilizador", role)
+                            }
                         }
                     } else {
                         supabase.auth.signInWith(Email) {
@@ -235,17 +241,18 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         val existing = supabase.from("nova_taxi_profiles").select {
                             filter { eq("id", uid) }
                         }.decodeList<TaxiProfile>().firstOrNull()
-                        val effectiveRole: String
-                        if (existing == null) {
-                            val profile = TaxiProfile(id = uid, tipoUtilizador = role, nome = name.trim())
-                            supabase.from("nova_taxi_profiles").insert(profile)
-                            if (role == "motorista") {
-                                supabase.from("nova_taxi_driver_profiles").insert(TaxiDriverProfile(id = uid))
+                        val profile = existing ?: if (!isLogin) {
+                            // Fallback for projects where the auth trigger has not yet been applied.
+                            TaxiProfile(id = uid, tipoUtilizador = role, nome = name.trim()).also {
+                                supabase.from("nova_taxi_profiles").insert(it)
+                                if (role == "motorista") {
+                                    supabase.from("nova_taxi_driver_profiles").insert(TaxiDriverProfile(id = uid))
+                                }
                             }
-                            effectiveRole = role
                         } else {
-                            effectiveRole = existing.tipoUtilizador
-}
+                            error("A conta autenticou, mas ainda não tem perfil NOVA Táxi. Volte a 'Criar conta' e conclua o registo com o mesmo e-mail, nome e tipo de utilizador.")
+                        }
+                        val effectiveRole = profile.tipoUtilizador
                         loggedUid = uid
                         loggedRole = effectiveRole
                         logged = true
