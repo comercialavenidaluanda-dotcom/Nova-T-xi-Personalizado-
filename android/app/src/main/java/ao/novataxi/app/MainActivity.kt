@@ -442,14 +442,15 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         }
                     } else {
                         val existing = supabase.from("nova_taxi_profiles").select {
-                            filter { eq("user_id", uid) }
+                            filter { eq("id", uid) }
                         }.decodeList<TaxiProfile>().firstOrNull()
                         val effectiveRole: String
                         if (existing == null) {
-                            val profile = TaxiProfile(userId = uid, role = role, fullName = name.trim(), email = email.trim().lowercase())
-                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "user_id" }
+                            val databaseRole = if (role == "DRIVER") "motorista" else "passageiro"
+                            val profile = TaxiProfile(userId = uid, role = databaseRole, fullName = name.trim())
+                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "id" }
                             if (role == "DRIVER") {
-                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "user_id" }
+                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "id" }
                             }
                             effectiveRole = role
                         } else {
