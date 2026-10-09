@@ -28,13 +28,13 @@ header{height:68px;background:#fff;border-bottom:1px solid var(--line);display:f
 <div class="metric"><div class="label">Motoristas aprovados</div><div id="kDrivers" class="value">—</div><div class="sub">Aprovação administrativa</div></div>
 <div class="metric"><div class="label">Motoristas com GPS recente</div><div id="kGps" class="value">—</div><div class="sub">Posição recebida nos últimos 2 min</div></div>
 <div class="metric"><div class="label">Corridas activas</div><div id="kRides" class="value">—</div><div class="sub">Pedidos, aceites e em curso</div></div>
-<div class="metric"><div class="label">Pagamentos pendentes</div><div id="kPayments" class="value">—</div><div class="sub">Não representa confirmação bancária</div></div>
+<div class="metric"><div class="label">Pagamentos pendentes</div><div id="kPayments" class="value">—</div><div class="sub">Não representa confirmação bancária</div></div><div class="metric"><div class="label">Comissões registadas</div><div id="kCommission" class="value">—</div><div class="sub">Só corridas lançadas no livro financeiro</div></div><div class="metric"><div class="label">Parte dos motoristas</div><div id="kDriverShare" class="value">—</div><div class="sub">Valores contabilizados, não transferências</div></div>
 </div>
 <div class="twocol">
 <section class="panel"><div class="panel-head"><h2>Mapa de acompanhamento GPS</h2><span id="gpsUpdated" class="muted" style="font-size:11px">A aguardar dados</span></div><div id="map" class="map"></div><div class="panel-body muted" style="font-size:11px">O mapa mostra apenas posições reais enviadas pelo dispositivo. Sem autorização GPS, sinal ou atualização recente, o veículo pode não aparecer.</div></section>
 <section class="panel"><div class="panel-head"><h2>Alertas de segurança</h2><span id="sosCount" class="pill off">0 abertos</span></div><div class="panel-body"><div id="sosFeed" class="feed"><div class="empty">A carregar alertas…</div></div></div></section>
 </div>
-<section class="panel"><div class="panel-head"><h2>Controlo administrativo</h2><span class="muted" style="font-size:11px">Ações registadas no backend</span></div><div class="panel-body" style="padding-bottom:0"><div class="tabs"><button class="tab active" data-tab="rides">Corridas</button><button class="tab" data-tab="drivers">Motoristas</button><button class="tab" data-tab="users">Passageiros/contas</button><button class="tab" data-tab="payments">Pagamentos</button></div></div><div class="table-wrap"><table><thead id="tableHead"></thead><tbody id="tableBody"><tr><td class="empty">A carregar…</td></tr></tbody></table></div></section>
+<section class="panel"><div class="panel-head"><h2>Controlo administrativo</h2><span class="muted" style="font-size:11px">Ações registadas no backend</span></div><div class="panel-body" style="padding-bottom:0"><div class="tabs"><button class="tab active" data-tab="rides">Corridas</button><button class="tab" data-tab="drivers">Motoristas</button><button class="tab" data-tab="users">Passageiros/contas</button><button class="tab" data-tab="payments">Pagamentos</button><button class="tab" data-tab="commissions">Comissões</button></div></div><div class="table-wrap"><table><thead id="tableHead"></thead><tbody id="tableBody"><tr><td class="empty">A carregar…</td></tr></tbody></table></div></section>
 <div class="foot">NOVA Táxi · painel protegido por Supabase Auth + RLS. A localização não é recolhida por este painel; é enviada pela aplicação do motorista com permissão explícita.</div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -46,7 +46,7 @@ header{height:68px;background:#fff;border-bottom:1px solid var(--line);display:f
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
   const $ = id => document.getElementById(id);
-  const state = { tab: 'rides', rides: [], profiles: [], drivers: [], vehicles: [], payments: [], sos: [], locations: [], markers: new Map(), map: null, channel: null, busy: false };
+  const state = { tab: 'rides', rides: [], profiles: [], drivers: [], vehicles: [], payments: [], sos: [], locations: [], ledger: [], markers: new Map(), map: null, channel: null, busy: false };
   const activeStates = new Set(['solicitada','ofertada','aceita','motorista_chegando','em_curso']);
   const labelState = s => ({solicitada:'Solicitada',ofertada:'Ofertada',aceita:'Aceite',motorista_chegando:'Motorista a caminho',em_curso:'Em curso',concluida:'Concluída',cancelada:'Cancelada',aberto:'Aberto',em_atendimento:'Em atendimento',resolvido:'Resolvido',pendente:'Pendente',pago:'Pago',cancelado:'Cancelado'}[s] || s || '—');
   const esc = v => String(v ?? '—').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -101,21 +101,26 @@ header{height:68px;background:#fff;border-bottom:1px solid var(--line);display:f
   async function loadAll() {
     if(state.busy) return; state.busy=true; $('refresh').disabled=true;
     try {
-      const [rides,profiles,drivers,vehicles,payments,sos,locations] = await Promise.all([
+      const [rides,profiles,drivers,vehicles,payments,sos,locations,ledgerResult] = await Promise.all([
         query('nova_taxi_rides','id,passageiro_id,motorista_id,categoria,origem_texto,destino_texto,estado,metodo_pagamento,valor_estimado,valor_final,criado_em,atualizado_em'),
         query('nova_taxi_profiles','id,tipo_utilizador,nome,telefone,ativo,criado_em'),
         query('nova_taxi_driver_profiles','id,disponivel,aprovado,atualizado_em'),
         query('nova_taxi_vehicles','id,motorista_id,marca,modelo,matricula,categoria,ativo'),
         query('nova_taxi_payments','id,corrida_id,metodo,valor,estado,criado_em'),
         query('nova_taxi_sos_events','id,utilizador_id,corrida_id,latitude,longitude,estado,observacao,criado_em,atualizado_em'),
-        query('nova_taxi_driver_locations','motorista_id,latitude,longitude,heading,accuracy_m,captured_at,updated_at')
+        query('nova_taxi_driver_locations','motorista_id,latitude,longitude,heading,accuracy_m,captured_at,updated_at'),
+        db.rpc('nova_taxi_admin_financial_ledger')
       ]);
-      Object.assign(state,{rides,profiles,drivers,vehicles,payments,sos,locations});
+      if (ledgerResult.error) throw new Error('Livro financeiro: ' + ledgerResult.error.message);
+      const ledger = ledgerResult.data || [];
+      Object.assign(state,{rides,profiles,drivers,vehicles,payments,sos,locations,ledger});
       $('kDrivers').textContent=drivers.filter(d=>d.aprovado).length;
       const recent=locations.filter(l=>Date.now()-new Date(l.captured_at).getTime()<120000);
       $('kGps').textContent=recent.length;
       $('kRides').textContent=rides.filter(r=>activeStates.has(r.estado)).length;
       $('kPayments').textContent=payments.filter(p=>p.estado==='pendente').length;
+      $('kCommission').textContent=money(ledger.reduce((n,x)=>n+Number(x.valor_comissao||0),0));
+      $('kDriverShare').textContent=money(ledger.reduce((n,x)=>n+Number(x.valor_motorista||0),0));
       $('gpsUpdated').textContent=locations.length ? 'Último sinal: '+time(locations.reduce((a,b)=>new Date(a.captured_at)>new Date(b.captured_at)?a:b).captured_at) : 'Sem posições GPS recebidas';
       renderSos(); renderTable(); renderMarkers();
     } catch(e) {
@@ -147,6 +152,9 @@ header{height:68px;background:#fff;border-bottom:1px solid var(--line);display:f
     } else if(state.tab==='users'){
       cols=['Utilizador','Telefone','Tipo','Estado','Registado','Ação'];
       rows=state.profiles.map(p=>[p.nome||'Sem nome',p.telefone||'—',p.tipo_utilizador,p.ativo?'Activo':'Suspenso',time(p.criado_em),p]);
+    } else if(state.tab==='commissions'){
+      cols=['Corrida','Motorista','Valor bruto','Comissão %','Comissão NOVA','Parte motorista','Registado'];
+      rows=state.ledger.map(l=>[l.corrida_id.slice(0,8)+'…',profileName(l.motorista_id),money(l.valor_bruto),Number(l.percentual)+'%',money(l.valor_comissao),money(l.valor_motorista),time(l.criado_em)]);
     } else {
       cols=['Pagamento','Corrida','Método','Valor','Estado','Criado'];
       rows=state.payments.slice().sort((a,b)=>new Date(b.criado_em)-new Date(a.criado_em)).map(p=>[p.id.slice(0,8)+'…',p.corrida_id.slice(0,8)+'…',p.metodo,money(p.valor),labelState(p.estado),time(p.criado_em)]);
