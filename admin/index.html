@@ -27,8 +27,8 @@
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL='https://earucsaqqtbllnqsxvlb.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='SUBSTITUIR_PELA_CHAVE_PUBLISHABLE_DO_PROJETO';
-const $=id=>document.getElementById(id), clientReady=SUPABASE_PUBLISHABLE_KEY!=='SUBSTITUIR_PELA_CHAVE_PUBLISHABLE_DO_PROJETO';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp';
+const $=id=>document.getElementById(id), clientReady=SUPABASE_PUBLISHABLE_KEY!=='sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp';
 const client=clientReady?createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
 function message(s){$('message').textContent=s}
 async function enter(session){
