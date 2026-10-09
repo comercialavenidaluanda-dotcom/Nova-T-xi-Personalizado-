@@ -1,22 +1,24 @@
 # Parceiros NOVA — gestão inteligente de frotas
 
 ## Estado
-Base de dados aditiva aplicada ao projeto Supabase NOVA Táxi. Nenhum veículo, empresa, alerta, subscrição ou utilizador fictício foi criado. A aplicação Android e o painel ainda precisam de ser ligados a estes módulos e testados.
+A base de dados aditiva está aplicada ao Supabase NOVA Táxi. Nenhum veículo, empresa, alerta, subscrição ou utilizador fictício foi criado. O menu Android e o painel administrativo ainda precisam de ser ligados a estes módulos e testados.
 
 ## Módulos
 - Empresas/frotas: registo com estado inicial `pending`; aprovação operacional continua a ser uma ação administrativa.
 - Membros: papéis `manager`, `dispatcher`, `driver` e `finance`.
 - Viaturas: matrícula, estado, motorista atribuído e quilometragem.
-- Geocercas: centro, raio e regras JSON; são configurações, não deteção automática já ativa.
+- Geocercas: centro, raio e regras JSON por frota.
 - Alertas: eventos gerados pelo servidor; clientes autenticados não podem inserir alertas diretamente.
 - Manutenção: agenda, categoria, custo AOA, prestador e estado.
 - Subscrição: campos para plano e comissão, sem ativar cobrança nem publicar preços automaticamente.
 
-## Segurança
+## Segurança e deteção
 - RLS ativado em todas as tabelas novas.
 - A leitura/gestão é limitada ao proprietário e membros autorizados da frota.
-- Alertas são apenas de leitura/atualização para gestores; a criação deve vir de processamento confiável do servidor.
-- A posição GPS, o desvio de rota e a perda de sinal ainda precisam de um avaliador no servidor e de notificações.
+- Um trigger de servidor avalia posições GPS confiáveis contra geocercas ativas e cria alertas `geofence_exit` com deduplicação de 10 minutos.
+- A geocerca só é avaliada quando a frota e a viatura estão ativas e existe motorista atribuído à viatura.
+- A tabela de alertas é adicionada ao Supabase Realtime quando a publicação está disponível; o painel ainda precisa de subscrever e apresentar os eventos.
+- Desvio de rota, perda de sinal e alertas push/SMS precisam de lógica separada.
 - Não existe imobilização remota da viatura.
 
 ## Planos comerciais (proposta, não publicada)
@@ -28,5 +30,6 @@ Base de dados aditiva aplicada ao projeto Supabase NOVA Táxi. Nenhum veículo, 
 ## Próximas integrações
 1. Ecrã Motorista: online/offline, corridas, ganhos, viatura, documentos, manutenção, segurança e apoio.
 2. Parceiros NOVA: pedido de adesão, aprovação, membros, viaturas e planos.
-3. Processamento de posições: geocerca, persistência de desvios, deduplicação de alertas e notificação do painel.
-4. Testes com contas e viaturas reais, sem dados fictícios.
+3. Painel administrativo: alertas Realtime, reconhecimento/resolução e registo de auditoria.
+4. Implementar deteção de desvio de rota e perda prolongada de sinal.
+5. Testar com contas e viaturas reais, sem dados fictícios.
