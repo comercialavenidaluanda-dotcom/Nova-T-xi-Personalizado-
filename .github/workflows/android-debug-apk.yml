@@ -5,6 +5,11 @@ on:
     paths:
       - "android/**"
       - ".github/workflows/android-debug-apk.yml"
+  pull_request:
+    paths:
+      - "android/**"
+      - ".github/workflows/android-debug-apk.yml"
+      - "supabase/migrations/**"
   workflow_dispatch:
 
 jobs:
@@ -13,15 +18,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Configure NOVA Táxi Supabase publishable key
-        shell: bash
-        env:
-          SUPABASE_KEY: sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK
-        run: |
-          set -e
-          test -n "$SUPABASE_KEY"
-          sed -i "s/%%SUPABASE_PUBLISHABLE_KEY%%/$SUPABASE_KEY/g" android/app/src/main/java/ao/novataxi/app/MainActivity.kt
 
       - name: Setup Java
         uses: actions/setup-java@v5

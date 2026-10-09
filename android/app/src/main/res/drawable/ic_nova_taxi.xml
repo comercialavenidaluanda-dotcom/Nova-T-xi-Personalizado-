@@ -4,9 +4,12 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:fillColor="#F46B45" android:pathData="M0,0h108v108h-108z" />
-    <path android:fillColor="#3A1837" android:pathData="M20,78 L20,32 Q20,27 25,27 L33,27 Q37,27 40,31 L68,66 L68,32 Q68,27 73,27 L81,27 Q86,27 86,32 L86,76 Q86,81 81,81 L74,81 Q70,81 67,77 L38,42 L38,76 Q38,81 33,81 L25,81 Q20,81 20,78 Z" />
-    <path android:fillColor="#FFF5E8" android:pathData="M27,73 L27,36 L33,36 L74,74 L74,36 L79,36 L79,73 L73,73 L32,36 L32,73 Z" />
-    <path android:fillColor="#FFD166" android:pathData="M79,15 L82,22 L90,23 L84,28 L86,36 L79,32 L72,36 L74,28 L68,23 L76,22 Z" />
-    <path android:fillColor="#FFF5E8" android:pathData="M25,88h58v3h-58z" />
+    <path android:fillColor="#FFF5E8" android:pathData="M0,0h108v108h-108z" />
+    <path android:fillColor="#3A1837" android:pathData="M54,8a46,46 0,1 0,0 92a46,46 0,1 0,0 -92z" />
+    <path android:fillColor="#F46B45" android:pathData="M24,74 C35,65 37,51 43,38 C47,28 55,26 62,31 C69,36 68,45 63,53 L54,69 C52,73 55,78 60,77 L78,73 L82,84 L56,89 C42,91 34,81 41,68 L53,46 C55,42 53,39 50,42 C45,49 43,67 31,80 Z" />
+    <path android:fillColor="#FFF5E8" android:pathData="M52,35 L57,38 L52,47 L47,44 Z" />
+    <path android:fillColor="#FFF5E8" android:pathData="M44,53 L49,56 L44,65 L39,62 Z" />
+    <path android:fillColor="#B9E769" android:pathData="M78,17 L82,26 L92,27 L84,34 L86,44 L78,39 L69,44 L72,34 L64,27 L74,26 Z" />
+    <path android:fillColor="#F46B45" android:pathData="M18,19h18v5h-18z" />
+    <path android:fillColor="#F46B45" android:pathData="M18,29h11v5h-11z" />
 </vector>
