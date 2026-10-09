@@ -31,15 +31,20 @@ Deno.serve(async (req: Request) => {
   if (userError || !userData.user) return reply(401, { error: "SESSION_INVALID" });
 
   const userId = userData.user.id;
-  const { data: grant, error: grantError } = await admin
-    .schema("private")
-    .from("nova_taxi_admins")
-    .select("active")
-    .eq("user_id", userId)
-    .maybeSingle();
+  // A tabela privada não está exposta ao PostgREST. Validamos o JWT do utilizador
+  // através da função RPC pública já existente, que consulta a tabela privada em SQL.
+  const caller = createClient(
+    url,
+    Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? serviceKey,
+    {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
+  );
+  const { data: isAdmin, error: grantError } = await caller.rpc("nova_taxi_admin_is_admin");
 
   if (grantError) return reply(500, { error: "ADMIN_AUTH_CHECK_FAILED" });
-  if (!grant || grant.active !== true) return reply(403, { error: "ADMIN_REQUIRED" });
+  if (isAdmin !== true) return reply(403, { error: "ADMIN_REQUIRED" });
 
   let input: { section?: string; limit?: number } = {};
   try { input = await req.json(); } catch { /* empty request body is treated as overview */ }
