@@ -49,6 +49,24 @@ create table if not exists public.nova_taxi_driver_locations (
   captured_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create or replace function private.nova_taxi_stamp_driver_location()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+  new.captured_at = now();
+  new.updated_at = now();
+  return new;
+end;
+$;
+revoke all on function private.nova_taxi_stamp_driver_location() from public, anon, authenticated;
+drop trigger if exists nova_taxi_stamp_driver_location on public.nova_taxi_driver_locations;
+create trigger nova_taxi_stamp_driver_location
+before insert or update on public.nova_taxi_driver_locations
+for each row execute function private.nova_taxi_stamp_driver_location();
+
 create index if not exists nova_taxi_driver_locations_updated_at_idx
   on public.nova_taxi_driver_locations(updated_at desc);
 alter table public.nova_taxi_driver_locations enable row level security;
