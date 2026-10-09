@@ -44,8 +44,16 @@ const money=v=>v===null||v===undefined?'—':Number(v).toLocaleString('pt-AO')+'
 const esc=v=>safe(v);
 function message(s){$('message').textContent=s}
 function el(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n}
+async function invokeAdminFunction(body){
+ const {data:{session},error:sessionError}=await client.auth.getSession();
+ if(sessionError||!session?.access_token) throw new Error('AUTH_REQUIRED: sessão autenticada ausente. Entre novamente no painel.');
+ return await client.functions.invoke('nova-taxi-admin-dashboard',{
+  body,
+  headers:{Authorization:'Bearer '+session.access_token,apikey:SUPABASE_PUBLISHABLE_KEY}
+ });
+}
 async function adminRequest(section){
- const {data,error}=await client.functions.invoke('nova-taxi-admin-dashboard',{body:{section,limit:150}});
+ const {data,error}=await invokeAdminFunction({section,limit:150});
  if(error) throw new Error(error.message||'Falha ao consultar o painel administrativo');
  if(data?.error) throw new Error(data.error==='ADMIN_REQUIRED'?'A conta não tem permissões de administrador.':data.error);
  return data;
@@ -91,7 +99,7 @@ async function loadSection(section){
 async function enter(session){
  if(!session)return;
  try{
-  const {data,error}=await client.functions.invoke('nova-taxi-admin-dashboard',{body:{section:'validate'}});
+  const {data,error}=await invokeAdminFunction({section:'validate'});
   if(error)throw new Error(error.message||'Falha ao validar acesso administrativo.');
   if(data?.error==='ADMIN_REQUIRED'){message('Acesso recusado: esta conta ainda não está autorizada como administradora.');return}
   if(data?.error)throw new Error(data.error);
