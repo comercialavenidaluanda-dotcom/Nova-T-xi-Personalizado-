@@ -254,6 +254,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var message by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var showInterprovincial by remember { mutableStateOf(false) }
+    var showPromo by remember { mutableStateOf(!activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).getBoolean("promo_seen_v1", false)) }
     var tripOrigin by remember { mutableStateOf("Luanda") }
     var tripDestination by remember { mutableStateOf("Benguela") }
     var tripDate by remember { mutableStateOf("") }
