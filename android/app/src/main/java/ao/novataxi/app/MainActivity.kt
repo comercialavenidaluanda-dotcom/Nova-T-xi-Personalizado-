@@ -21,8 +21,7 @@ import com.google.android.gms.location.*
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.OtpType
-import io.github.jan.supabase.auth.providers.builtin.OTP
+import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +44,8 @@ data class TaxiProfile(
     @SerialName("user_id") val userId: String,
     val role: String,
     @SerialName("full_name") val fullName: String,
-    val phone: String
+    val email: String,
+    val phone: String? = null
 )
 
 @Serializable
@@ -117,11 +117,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun NovaTaxiApp(activity: MainActivity) {
-    var phone by remember { mutableStateOf("") }
-    var otp by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("PASSENGER") }
-    var sent by remember { mutableStateOf(false) }
+    var isLogin by remember { mutableStateOf(false) }
     var logged by remember { mutableStateOf(false) }
     var loggedRole by remember { mutableStateOf("PASSENGER") }
     var loggedUid by remember { mutableStateOf("") }
@@ -132,7 +132,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
         val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true || result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted && loggedRole == "DRIVER") {
             activity.startDriverGps(loggedUid)
-            message = "GPS ativado. O servidor só aceitará posições após a aprovação do motorista."
+            message = "Pedido de GPS iniciado. O servidor só aceitará posições após a aprovação do motorista."
         } else if (!granted) message = "Permita a localização para enviar o GPS do motorista."
     }
 
@@ -140,10 +140,11 @@ private fun NovaTaxiApp(activity: MainActivity) {
         Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("NOVA Táxi", style = MaterialTheme.typography.headlineMedium)
             Text(if (loggedRole == "DRIVER") "Conta de motorista" else "Conta de passageiro")
+            Text("Conta autenticada por e-mail e perfil guardado no Supabase.")
             if (loggedRole == "DRIVER") {
                 Button(onClick = { locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS em tempo real") }
-                Text("O GPS é enviado enquanto a aplicação está aberta. O servidor bloqueia posições operacionais até a aprovação do motorista.", style = MaterialTheme.typography.bodySmall)
-            } else Text("Sessão autenticada. Registo ligado ao Supabase NOVA Táxi.")
+                Text("O GPS é enviado enquanto a aplicação está aberta. O servidor bloqueia posições operacionais até à aprovação do motorista.", style = MaterialTheme.typography.bodySmall)
+            }
             if (message.isNotBlank()) Text(message)
             AndroidView(factory = { ctx ->
                 MapView(ctx).apply {
@@ -161,41 +162,85 @@ private fun NovaTaxiApp(activity: MainActivity) {
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("NOVA Táxi", style = MaterialTheme.typography.headlineLarge)
         Text("Pedimos. Chegamos.")
-        if (!sent) {
-            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Telefone (+244...)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())
+        Text(if (isLogin) "Entrar com e-mail" else "Criar conta de teste por e-mail")
+        if (!isLogin) {
+            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome completo") }, modifier = Modifier.fillMaxWidth())
             Text("Registar como")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = role == "PASSENGER", onClick = { role = "PASSENGER" }, label = { Text("Passageiro") })
                 FilterChip(selected = role == "DRIVER", onClick = { role = "DRIVER" }, label = { Text("Motorista") })
             }
-            Button(enabled = !busy && phone.isNotBlank(), onClick = {
-                busy = true; message = "A enviar código SMS…"
-                scope.launch {
-                    try {
-                        supabase.auth.signInWith(OTP) { this.phone = phone.trim() }
-                        sent = true; message = "Código enviado. Verifique o SMS."
-                    } catch (e: Exception) { message = e.message ?: "Não foi possível enviar o código." }
-                    finally { busy = false }
+        }
+        OutlinedTextField(value = email, onValueChange = { email = it.trim() }, label = { Text("E-mail") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Palavra-passe (mínimo 8 caracteres)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), modifier = Modifier.fillMaxWidth())
+        Button(enabled = !busy && email.contains("@") && password.length >= 8 && (isLogin || name.isNotBlank()), onClick = {
+            busy = true
+            message = if (isLogin) "A autenticar…" else "A criar a conta no Supabase…"
+            scope.launch {
+                try {
+                    if (!isLogin) {
+                        supabase.auth.signUpWith(Email) {
+                            this.email = email.trim()
+                            this.password = password
+                        }
+                    } else {
+                        supabase.auth.signInWith(Email) {
+                            this.email = email.trim()
+                            this.password = password
+                        }
+                    }
+
+                    val uid = supabase.auth.currentUserOrNull()?.id
+                    if (uid == null) {
+                        if (!isLogin) {
+                            isLogin = true
+                            message = "Conta solicitada. Confirme o e-mail enviado pelo Supabase e depois entre com o mesmo e-mail e palavra-passe para concluir o perfil."
+                        } else {
+                            error("A autenticação não devolveu uma sessão. Confirme o e-mail e verifique as definições de Auth no Supabase.")
+                        }
+                    } else {
+                        val existing = supabase.from("nova_taxi_profiles").select {
+                            filter { eq("user_id", uid) }
+                        }.decodeList<TaxiProfile>().firstOrNull()
+                        val effectiveRole: String
+                        if (existing == null) {
+                            val profile = TaxiProfile(userId = uid, role = role, fullName = name.trim(), email = email.trim().lowercase())
+                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "user_id" }
+                            if (role == "DRIVER") {
+                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "user_id" }
+                            }
+                            effectiveRole = role
+                        } else {
+                            effectiveRole = existing.role
+                            if (existing.email.isBlank()) {
+                                supabase.from("nova_taxi_profiles").update({
+                                    set("email", email.trim().lowercase())
+                                }) {
+                                    filter { eq("user_id", uid) }
+                                }
+                            }
+                        }
+                        loggedUid = uid
+                        loggedRole = effectiveRole
+                        logged = true
+                        message = if (effectiveRole == "DRIVER") "Perfil guardado. A aprovação administrativa é necessária antes do GPS operacional." else "Registo concluído e guardado no Supabase."
+                    }
+                } catch (e: Exception) {
+                    message = e.message ?: "Não foi possível concluir a operação. Verifique a configuração de Auth e as políticas RLS."
+                } finally {
+                    busy = false
                 }
-            }, modifier = Modifier.fillMaxWidth()) { Text(if (busy) "A aguardar…" else "Continuar por telefone") }
-        } else {
-            OutlinedTextField(value = otp, onValueChange = { otp = it }, label = { Text("Código recebido por SMS") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome completo") }, modifier = Modifier.fillMaxWidth())
-            Button(enabled = !busy && otp.isNotBlank() && name.isNotBlank(), onClick = {
-                busy = true; message = "A validar e a guardar o perfil…"
-                scope.launch {
-                    try {
-                        supabase.auth.verifyPhoneOtp(type = OtpType.Phone.SMS, phone = phone.trim(), token = otp.trim())
-                        val uid = supabase.auth.currentUserOrNull()?.id ?: error("O Supabase não criou uma sessão válida.")
-                        supabase.from("nova_taxi_profiles").upsert(TaxiProfile(userId = uid, role = role, fullName = name.trim(), phone = phone.trim())) { onConflict = "user_id" }
-                        if (role == "DRIVER") supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "user_id" }
-                        loggedUid = uid; loggedRole = role; logged = true
-                        message = if (role == "DRIVER") "Perfil criado. É necessária aprovação antes do envio de GPS operacional." else "Registo concluído."
-                    } catch (e: Exception) { message = e.message ?: "Não foi possível concluir o registo. Verifique Auth e políticas Supabase." }
-                    finally { busy = false }
-                }
-            }, modifier = Modifier.fillMaxWidth()) { Text(if (busy) "A validar…" else "Verificar código e registar") }
+            }
+        }, modifier = Modifier.fillMaxWidth()) {
+            Text(if (busy) "A processar…" else if (isLogin) "Entrar" else "Criar conta")
+        }
+        TextButton(onClick = {
+            isLogin = !isLogin
+            message = ""
+        }, modifier = Modifier.fillMaxWidth()) {
+            Text(if (isLogin) "Ainda não tenho conta — criar conta" else "Já tenho conta — entrar")
         }
         if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall)
+        Text("Registo de teste por e-mail. Não é pedido método de pagamento no cadastro.", style = MaterialTheme.typography.bodySmall)
     }
 }
