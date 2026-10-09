@@ -16,6 +16,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
@@ -32,7 +33,10 @@ private val NovaInk = Color(0xFF242424)
 private val supabase = createSupabaseClient(
     supabaseUrl = SUPABASE_URL,
     supabaseKey = SUPABASE_KEY
-) { install(Auth) }
+) {
+    install(Auth)
+    install(Postgrest)
+}
 
 @Serializable
 data class TaxiProfile(
