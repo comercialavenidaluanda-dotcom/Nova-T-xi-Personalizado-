@@ -44,7 +44,7 @@ data class TaxiProfile(
     @SerialName("user_id") val userId: String,
     val role: String,
     @SerialName("full_name") val fullName: String,
-    val email: String,
+    val email: String? = null,
     val phone: String? = null
 )
 
@@ -212,7 +212,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
                             effectiveRole = role
                         } else {
                             effectiveRole = existing.role
-                            if (existing.email.isBlank()) {
+                            if (existing.email.isNullOrBlank()) {
                                 supabase.from("nova_taxi_profiles").update({
                                     set("email", email.trim().lowercase())
                                 }) {
