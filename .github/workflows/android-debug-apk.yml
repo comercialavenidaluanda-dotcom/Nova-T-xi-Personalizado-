@@ -2,7 +2,7 @@ name: NOVA Táxi — APK Debug
 
 on:
   push:
-    branches: [main]
+    branches: [main, "rebuild/orange-auth-postgrest"]
     paths:
       - "android/**"
       - ".github/workflows/android-debug-apk.yml"
