@@ -34,8 +34,8 @@ import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import java.time.Instant
 
-private const val SUPABASE_URL = "https://earucsaqqtbllnqsxvlb.supabase.co"
-private const val SUPABASE_KEY = "%%SUPABASE_PUBLISHABLE_KEY%%"
+private const val SUPABASE_URL = BuildConfig.SUPABASE_URL
+private const val SUPABASE_KEY = BuildConfig.SUPABASE_PUBLISHABLE_KEY
 
 private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabaseKey = SUPABASE_KEY) { install(Auth) }
 
