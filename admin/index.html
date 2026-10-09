@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NOVA Táxi · Centro de Operações</title>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+:root{--ink:#19202a;--muted:#667085;--line:#e7e9ee;--paper:#f7f8fa;--orange:#f07828;--violet:#7357d9;--green:#18845b;--red:#c53b45}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+button,input{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 13px;font-weight:650;background:var(--ink);color:white}button:disabled{opacity:.5;cursor:wait}.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}.orange{background:var(--orange)}.danger{background:var(--red)}.small{font-size:12px;padding:6px 9px}
+header{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:11px;font-weight:850;font-size:18px}.logo{width:38px;height:38px;border-radius:12px;background:var(--orange);color:white;display:grid;place-items:center;font-weight:900}.brand small{display:block;font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.06em}
+.pill{border-radius:999px;background:#e7f6ed;color:var(--green);padding:5px 9px;font-size:11px;font-weight:750}.pill.off{background:#f2f3f5;color:#6b7280}.shell{max-width:1500px;margin:auto;padding:22px}.heading{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:18px}.heading h1{margin:0;font-size:25px;letter-spacing:-.04em}.muted{color:var(--muted)}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:var(--violet)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}.metric,.panel{background:#fff;border:1px solid var(--line);border-radius:16px}.metric{padding:16px}.metric .label{color:var(--muted);font-size:12px}.metric .value{font-size:27px;font-weight:850;letter-spacing:-.04em;margin-top:6px}.metric .sub{font-size:11px;color:var(--muted);margin-top:3px}
+.twocol{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.8fr);gap:14px;margin-bottom:14px}.panel-head{padding:15px 17px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}.panel-head h2{margin:0;font-size:14px}.panel-body{padding:14px 16px}.map{height:390px;width:100%;background:#eef1f4;border-radius:0 0 16px 16px}.feed{display:flex;flex-direction:column;gap:10px;max-height:390px;overflow:auto}.feed-item{display:flex;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid #f0f1f4}.dot{width:9px;height:9px;border-radius:50%;background:var(--orange);margin-top:5px;flex:none}.feed-item strong{font-size:12px}.feed-item p{margin:2px 0 0;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:15px 0}.tab{background:#fff;color:#535b68;border:1px solid var(--line)}.tab.active{background:var(--ink);color:#fff}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:12px 13px;border-bottom:1px solid #f0f1f4;font-size:12px}th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;background:#fcfcfd}td strong{font-size:12px}.status{display:inline-block;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:750;background:#f1f2f5;color:#525866}.status.solicitada,.status.aberto,.status.pendente{background:#fff1dc;color:#94540a}.status.em_curso,.status.aceita,.status.pago{background:#e7f6ed;color:#14774e}.status.cancelada,.status.resolvido{background:#fce8e8;color:#a12d35}.empty{padding:25px 12px;text-align:center;color:var(--muted);font-size:12px}.row-actions{display:flex;gap:5px;flex-wrap:wrap}
+.login-wrap{min-height:calc(100vh - 68px);display:grid;place-items:center;padding:20px}.login{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:20px;padding:25px;box-shadow:0 12px 40px #1018280c}.login h1{margin:8px 0;font-size:23px;letter-spacing:-.04em}.login p{color:var(--muted);font-size:13px}.field{display:flex;flex-direction:column;gap:6px;margin:14px 0}.field label{font-size:12px;font-weight:700}.field input{border:1px solid #d7dbe2;border-radius:10px;padding:12px;background:white;color:var(--ink);outline-color:var(--violet)}.notice{font-size:12px;padding:10px 12px;background:#f5f2ff;border-radius:10px;color:#5140a0;margin-top:12px}.error{color:var(--red);font-size:12px;min-height:18px}.hidden{display:none!important}.foot{padding:15px 0;color:var(--muted);font-size:11px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.twocol{grid-template-columns:1fr}.shell{padding:14px}.heading h1{font-size:21px}.map{height:330px}}
+@media(max-width:480px){header{padding:0 13px}.brand{font-size:15px}.grid{gap:8px}.metric{padding:12px}.metric .value{font-size:23px}.shell{padding:11px}.heading{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">N</div><div>NOVA Táxi<small>CENTRO DE OPERAÇÕES</small></div></div><div style="display:flex;align-items:center;gap:10px"><span id="connection" class="pill off">Desligado</span><button id="logout" class="secondary small hidden">Sair</button></div></header>
+<section id="loginScreen" class="login-wrap"><div class="login"><div class="eyebrow">Acesso restrito</div><h1>Gestão da operação</h1><p>Entre com o telefone autorizado para administração. O acesso só é concedido a contas previamente autorizadas no backend.</p><div class="field"><label for="phone">Telefone com indicativo do país</label><input id="phone" type="tel" placeholder="+244923000000" autocomplete="tel"></div><button id="sendOtp" class="orange" style="width:100%">Enviar código de acesso</button><div id="otpArea" class="hidden"><div class="field"><label for="otp">Código SMS</label><input id="otp" inputmode="numeric" autocomplete="one-time-code" placeholder="Código recebido"></div><button id="verifyOtp" style="width:100%">Validar e entrar</button></div><div id="loginError" class="error" role="status"></div><div class="notice">A conta tem de ser autorizada no Supabase. Não existe conta de administrador fictícia ou acesso público.</div></div></section>
+<main id="dashboard" class="shell hidden">
+<div class="heading"><div><div class="eyebrow">Operação · Luanda e outras províncias</div><h1>Visão geral</h1><div class="muted">Dados reais do Supabase · atualização em tempo real quando há alterações</div></div><button id="refresh" class="secondary">↻ Atualizar</button></div>
+<div class="grid">
+<div class="metric"><div class="label">Motoristas aprovados</div><div id="kDrivers" class="value">—</div><div class="sub">Aprovação administrativa</div></div>
+<div class="metric"><div class="label">Motoristas com GPS recente</div><div id="kGps" class="value">—</div><div class="sub">Posição recebida nos últimos 2 min</div></div>
+<div class="metric"><div class="label">Corridas activas</div><div id="kRides" class="value">—</div><div class="sub">Pedidos, aceites e em curso</div></div>
+<div class="metric"><div class="label">Pagamentos pendentes</div><div id="kPayments" class="value">—</div><div class="sub">Não representa confirmação bancária</div></div>
+</div>
+<div class="twocol">
+<section class="panel"><div class="panel-head"><h2>Mapa de acompanhamento GPS</h2><span id="gpsUpdated" class="muted" style="font-size:11px">A aguardar dados</span></div><div id="map" class="map"></div><div class="panel-body muted" style="font-size:11px">O mapa mostra apenas posições reais enviadas pelo dispositivo. Sem autorização GPS, sinal ou atualização recente, o veículo pode não aparecer.</div></section>
+<section class="panel"><div class="panel-head"><h2>Alertas de segurança</h2><span id="sosCount" class="pill off">0 abertos</span></div><div class="panel-body"><div id="sosFeed" class="feed"><div class="empty">A carregar alertas…</div></div></div></section>
+</div>
+<section class="panel"><div class="panel-head"><h2>Controlo administrativo</h2><span class="muted" style="font-size:11px">Ações registadas no backend</span></div><div class="panel-body" style="padding-bottom:0"><div class="tabs"><button class="tab active" data-tab="rides">Corridas</button><button class="tab" data-tab="drivers">Motoristas</button><button class="tab" data-tab="users">Passageiros/contas</button><button class="tab" data-tab="payments">Pagamentos</button></div></div><div class="table-wrap"><table><thead id="tableHead"></thead><tbody id="tableBody"><tr><td class="empty">A carregar…</td></tr></tbody></table></div></section>
+<div class="foot">NOVA Táxi · painel protegido por Supabase Auth + RLS. A localização não é recolhida por este painel; é enviada pela aplicação do motorista com permissão explícita.</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(() => {
+  const SUPABASE_URL = 'https://vgbnnikfsmprcpvtypuh.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const $ = id => document.getElementById(id);
+  const state = { tab: 'rides', rides: [], profiles: [], drivers: [], vehicles: [], payments: [], sos: [], locations: [], markers: new Map(), map: null, channel: null, busy: false };
+  const activeStates = new Set(['solicitada','ofertada','aceita','motorista_chegando','em_curso']);
+  const labelState = s => ({solicitada:'Solicitada',ofertada:'Ofertada',aceita:'Aceite',motorista_chegando:'Motorista a caminho',em_curso:'Em curso',concluida:'Concluída',cancelada:'Cancelada',aberto:'Aberto',em_atendimento:'Em atendimento',resolvido:'Resolvido',pendente:'Pendente',pago:'Pago',cancelado:'Cancelado'}[s] || s || '—');
+  const esc = v => String(v ?? '—').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const time = v => v ? new Date(v).toLocaleString('pt-AO',{dateStyle:'short',timeStyle:'short'}) : '—';
+  const money = v => v == null ? '—' : Number(v).toLocaleString('pt-AO',{maximumFractionDigits:0}) + ' Kz';
+  const setErr = msg => { $('loginError').textContent = msg || ''; };
+  async function requireAdmin() {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) return showLogin();
+    const { data, error } = await db.rpc('nova_taxi_admin_is_admin');
+    if (error || data !== true) {
+      await db.auth.signOut();
+      showLogin();
+      setErr('Esta conta ainda não tem permissão administrativa. Solicite autorização ao responsável pelo Supabase.');
+      return;
+    }
+    $('loginScreen').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('logout').classList.remove('hidden');
+    $('connection').textContent = 'Ligado'; $('connection').classList.remove('off');
+    initMap(); await loadAll(); subscribeRealtime();
+  }
+  function showLogin(){ $('loginScreen').classList.remove('hidden'); $('dashboard').classList.add('hidden'); $('logout').classList.add('hidden'); $('connection').textContent='Desligado'; $('connection').classList.add('off'); }
+  $('sendOtp').addEventListener('click', async () => {
+    setErr(''); const phone = $('phone').value.trim();
+    if (!/^\+[1-9]\d{7,14}$/.test(phone)) { setErr('Use o formato internacional, por exemplo +244…'); return; }
+    $('sendOtp').disabled = true;
+    const { error } = await db.auth.signInWithOtp({ phone });
+    $('sendOtp').disabled = false;
+    if (error) { setErr('Não foi possível enviar o código: ' + error.message); return; }
+    $('otpArea').classList.remove('hidden'); setErr('Código solicitado. Verifique se o serviço SMS está configurado.');
+  });
+  $('verifyOtp').addEventListener('click', async () => {
+    setErr(''); $('verifyOtp').disabled = true;
+    const { error } = await db.auth.verifyOtp({ phone:$('phone').value.trim(), token:$('otp').value.trim(), type:'sms' });
+    $('verifyOtp').disabled = false;
+    if (error) { setErr('Código não validado: ' + error.message); return; }
+    await requireAdmin();
+  });
+  $('logout').addEventListener('click', async () => { if(state.channel) await db.removeChannel(state.channel); await db.auth.signOut(); showLogin(); });
+  $('refresh').addEventListener('click', loadAll);
+  document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b)); state.tab=b.dataset.tab; renderTable(); }));
+  function initMap() {
+    if (state.map) { state.map.resize(); return; }
+    state.map = new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',center:[13.2894,-8.8390],zoom:10});
+    state.map.addControl(new maplibregl.NavigationControl({showCompass:true}),'top-right');
+    state.map.on('load', renderMarkers);
+  }
+  async function query(table, columns='*') {
+    const { data, error } = await db.from(table).select(columns).limit(500);
+    if(error) throw new Error(table + ': ' + error.message);
+    return data || [];
+  }
+  async function loadAll() {
+    if(state.busy) return; state.busy=true; $('refresh').disabled=true;
+    try {
+      const [rides,profiles,drivers,vehicles,payments,sos,locations] = await Promise.all([
+        query('nova_taxi_rides','id,passageiro_id,motorista_id,categoria,origem_texto,destino_texto,estado,metodo_pagamento,valor_estimado,valor_final,criado_em,atualizado_em'),
+        query('nova_taxi_profiles','id,tipo_utilizador,nome,telefone,ativo,criado_em'),
+        query('nova_taxi_driver_profiles','id,disponivel,aprovado,atualizado_em'),
+        query('nova_taxi_vehicles','id,motorista_id,marca,modelo,matricula,categoria,ativo'),
+        query('nova_taxi_payments','id,corrida_id,metodo,valor,estado,criado_em'),
+        query('nova_taxi_sos_events','id,utilizador_id,corrida_id,latitude,longitude,estado,observacao,criado_em,atualizado_em'),
+        query('nova_taxi_driver_locations','motorista_id,latitude,longitude,heading,accuracy_m,captured_at,updated_at')
+      ]);
+      Object.assign(state,{rides,profiles,drivers,vehicles,payments,sos,locations});
+      $('kDrivers').textContent=drivers.filter(d=>d.aprovado).length;
+      const recent=locations.filter(l=>Date.now()-new Date(l.captured_at).getTime()<120000);
+      $('kGps').textContent=recent.length;
+      $('kRides').textContent=rides.filter(r=>activeStates.has(r.estado)).length;
+      $('kPayments').textContent=payments.filter(p=>p.estado==='pendente').length;
+      $('gpsUpdated').textContent=locations.length ? 'Último sinal: '+time(locations.reduce((a,b)=>new Date(a.captured_at)>new Date(b.captured_at)?a:b).captured_at) : 'Sem posições GPS recebidas';
+      renderSos(); renderTable(); renderMarkers();
+    } catch(e) {
+      $('tableBody').innerHTML='<tr><td class="empty" colspan="8">Erro ao carregar dados reais: '+esc(e.message)+'. Confirme a migração e a autorização de administrador.</td></tr>';
+    } finally { state.busy=false; $('refresh').disabled=false; }
+  }
+  function profileName(id){ const p=state.profiles.find(x=>x.id===id); return p?.nome || p?.telefone || (id ? id.slice(0,8)+'…' : 'Sem atribuição'); }
+  function renderSos(){
+    const open=state.sos.filter(s=>!['resolvido','cancelado'].includes(s.estado)); $('sosCount').textContent=open.length+' abertos'; $('sosCount').classList.toggle('off',!open.length);
+    const feed=$('sosFeed'); feed.replaceChildren();
+    if(!open.length){feed.innerHTML='<div class="empty">Não há alertas SOS abertos no banco de dados.</div>';return;}
+    open.sort((a,b)=>new Date(b.criado_em)-new Date(a.criado_em)).forEach(s=>{
+      const item=document.createElement('div');item.className='feed-item';
+      const dot=document.createElement('span');dot.className='dot';dot.style.background='var(--red)';
+      const text=document.createElement('div');text.innerHTML='<strong>Alerta SOS · '+esc(labelState(s.estado))+'</strong><p>'+esc(profileName(s.utilizador_id))+' · '+esc(time(s.criado_em))+'</p><p>'+esc(s.observacao || 'Sem observação')+'</p>';
+      if(s.latitude!=null && s.longitude!=null){const link=document.createElement('a');link.href='https://www.openstreetmap.org/?mlat='+encodeURIComponent(s.latitude)+'&mlon='+encodeURIComponent(s.longitude)+'#map=17/'+encodeURIComponent(s.latitude)+'/'+encodeURIComponent(s.longitude);link.target='_blank';link.rel='noopener';link.textContent='Ver coordenadas';link.style.fontSize='12px';text.appendChild(link)}
+      item.append(dot,text);feed.appendChild(item);
+    });
+  }
+  function renderTable(){
+    const head=$('tableHead'),body=$('tableBody');head.replaceChildren();body.replaceChildren();
+    let cols=[],rows=[];
+    if(state.tab==='rides'){
+      cols=['Corrida','Passageiro','Motorista','Categoria','Estado','Valor','Criada'];
+      rows=state.rides.slice().sort((a,b)=>new Date(b.criado_em)-new Date(a.criado_em)).map(r=>[r.id.slice(0,8)+'…',profileName(r.passageiro_id),profileName(r.motorista_id),r.categoria,labelState(r.estado),money(r.valor_final ?? r.valor_estimado),time(r.criado_em),r]);
+    } else if(state.tab==='drivers'){
+      cols=['Motorista','Telefone','Viatura','Disponível','Aprovação','Ação'];
+      rows=state.drivers.map(d=>{const p=state.profiles.find(x=>x.id===d.id)||{};const v=state.vehicles.find(x=>x.motorista_id===d.id);return [p.nome||'Sem nome',p.telefone||'—',v?[v.marca,v.modelo,v.matricula].filter(Boolean).join(' · '):'Sem viatura',d.disponivel?'Sim':'Não',d.aprovado?'Aprovado':'Por aprovar',d]});
+    } else if(state.tab==='users'){
+      cols=['Utilizador','Telefone','Tipo','Estado','Registado','Ação'];
+      rows=state.profiles.map(p=>[p.nome||'Sem nome',p.telefone||'—',p.tipo_utilizador,p.ativo?'Activo':'Suspenso',time(p.criado_em),p]);
+    } else {
+      cols=['Pagamento','Corrida','Método','Valor','Estado','Criado'];
+      rows=state.payments.slice().sort((a,b)=>new Date(b.criado_em)-new Date(a.criado_em)).map(p=>[p.id.slice(0,8)+'…',p.corrida_id.slice(0,8)+'…',p.metodo,money(p.valor),labelState(p.estado),time(p.criado_em)]);
+    }
+    const tr=document.createElement('tr');cols.forEach(c=>{const th=document.createElement('th');th.textContent=c;tr.appendChild(th)});head.appendChild(tr);
+    if(!rows.length){const r=document.createElement('tr'),td=document.createElement('td');td.colSpan=cols.length;td.className='empty';td.textContent='Sem registos reais nesta secção.';r.appendChild(td);body.appendChild(r);return;}
+    rows.forEach(row=>{
+      const tr=document.createElement('tr');
+      row.slice(0,cols.length).forEach((val,i)=>{
+        const td=document.createElement('td');
+        if(state.tab==='drivers' && i===5){
+          const b=document.createElement('button');b.className='small '+(val.aprovado?'danger':'orange');b.textContent=val.aprovado?'Suspender aprovação':'Aprovar motorista';b.addEventListener('click',()=>approveDriver(val.id,!val.aprovado));td.appendChild(b);
+        } else if(state.tab==='users' && i===5){
+          const b=document.createElement('button');b.className='small '+(val.ativo?'danger':'orange');b.textContent=val.ativo?'Suspender':'Reactivar';b.addEventListener('click',()=>setProfileActive(val.id,!val.ativo));td.appendChild(b);
+        } else if((state.tab==='rides' && i===4)||(state.tab==='payments' && i===4)){
+          td.innerHTML='<span class="status '+esc(row[state.tab==='rides'?4:4].toLowerCase().replace(/ /g,'_'))+'">'+esc(val)+'</span>';
+        } else {td.textContent=val ?? '—';}
+        tr.appendChild(td);
+      });body.appendChild(tr);
+    });
+  }
+  async function approveDriver(id,approved){
+    if(!confirm((approved?'Aprovar':'Suspender')+' este motorista?'))return;
+    const {error}=await db.rpc('nova_taxi_admin_set_driver_approval',{p_driver_id:id,p_approved:approved});
+    if(error){alert('Ação não executada: '+error.message);return;} await loadAll();
+  }
+  async function setProfileActive(id,active){
+    if(!confirm((active?'Reactivar':'Suspender')+' esta conta?'))return;
+    const {error}=await db.rpc('nova_taxi_admin_set_profile_active',{p_user_id:id,p_active:active});
+    if(error){alert('Ação não executada: '+error.message);return;} await loadAll();
+  }
+  function renderMarkers(){
+    if(!state.map || !state.map.isStyleLoaded())return;
+    const alive=new Set();
+    state.locations.forEach(l=>{
+      if(!Number.isFinite(Number(l.latitude))||!Number.isFinite(Number(l.longitude)))return;
+      alive.add(l.motorista_id);
+      let marker=state.markers.get(l.motorista_id);
+      const p=state.profiles.find(x=>x.id===l.motorista_id);
+      const d=state.drivers.find(x=>x.id===l.motorista_id);
+      const fresh=Date.now()-new Date(l.captured_at).getTime()<120000;
+      const el=marker?marker.getElement():document.createElement('div');
+      el.style.cssText='width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 1px 7px #0005;background:'+(fresh&&d?.disponivel?'#18845b':'#f07828')+';cursor:pointer';
+      if(!marker){marker=new maplibregl.Marker({element:el}).setLngLat([Number(l.longitude),Number(l.latitude)]).addTo(state.map);state.markers.set(l.motorista_id,marker);}
+      marker.setLngLat([Number(l.longitude),Number(l.latitude)]).setPopup(new maplibregl.Popup({offset:12}).setHTML('<strong>'+esc(p?.nome||'Motorista')+'</strong><br>'+esc(d?.disponivel?'Disponível':'Não disponível')+'<br><small>GPS: '+esc(time(l.captured_at))+(fresh?'':' · sinal antigo')+'</small>'));
+    });
+    for(const [id,m] of state.markers){if(!alive.has(id)){m.remove();state.markers.delete(id)}}
+  }
+  function subscribeRealtime(){
+    if(state.channel)db.removeChannel(state.channel);
+    state.channel=db.channel('nova-taxi-admin-live')
+      .on('postgres_changes',{event:'*',schema:'public',table:'nova_taxi_rides'},()=>loadAll())
+      .on('postgres_changes',{event:'*',schema:'public',table:'nova_taxi_driver_profiles'},()=>loadAll())
+      .on('postgres_changes',{event:'*',schema:'public',table:'nova_taxi_profiles'},()=>loadAll())
+      .on('postgres_changes',{event:'*',schema:'public',table:'nova_taxi_payments'},()=>loadAll())
+      .on('postgres_changes',{event:'*',schema:'public',table:'nova_taxi_sos_events'},()=>loadAll())
+      .on('postgres_changes',{event:'*',schema:'public',table:'nova_taxi_driver_locations'},()=>loadAll())
+      .subscribe(status=>{if(status==='SUBSCRIBED'){$('connection').textContent='Tempo real ligado';$('connection').classList.remove('off')}else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){$('connection').textContent='A reconectar';$('connection').classList.add('off')}});
+  }
+  db.auth.onAuthStateChange((_event,session)=>{if(!session)showLogin();});
+  db.auth.getSession().then(({data})=>{if(data.session)requireAdmin();});
+})();
+</script>
+</body>
+</html>
