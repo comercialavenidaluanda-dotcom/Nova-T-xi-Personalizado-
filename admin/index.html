@@ -91,27 +91,12 @@ async function loadSection(section){
 async function enter(session){
  if(!session)return;
  try{
-  const {data,error}=await client.from('nova_taxi_profiles')
-   .select('role,status').eq('user_id',session.user.id).maybeSingle();
-  if(error){
-   const code=String(error.code||'');
-   const detail=code==='42501'
-    ? 'A consulta foi bloqueada por permissões/RLS (42501). Verifique a política SELECT do perfil do próprio utilizador.'
-    : code==='PGRST205'||code==='42P01'
-     ? 'A tabela nova_taxi_profiles não foi encontrada no schema consultado.'
-     : code==='PGRST116'
-      ? 'A consulta do perfil devolveu um resultado incompatível.'
-      : (error.message||'Erro sem detalhe devolvido pelo Supabase.');
-   throw new Error(detail+' Código: '+(code||'não informado')+'.');
-  }
-  if(!data){
+  // Autorizar no backend usando a mesma função protegida que fornece os dados administrativos.
+  // Não confiar em colunas role/status que não existem neste projeto.
+  const access=await adminRequest('overview');
+  if(!access || access.error==='ADMIN_REQUIRED'){
    await client.auth.signOut();
-   message('Acesso recusado: a conta autenticou, mas não foi encontrado perfil em nova_taxi_profiles para este user_id. Confirme o projeto Supabase e o user_id; não crie perfil ADMIN automaticamente.');
-   return;
-  }
-  if(String(data.role||'').toUpperCase()!=='ADMIN'||String(data.status||'').toUpperCase()!=='ACTIVE'){
-   await client.auth.signOut();
-   message('Acesso recusado: o perfil existe, mas role/status não autorizam o acesso. É necessário ADMIN e ACTIVE, configurados por um administrador autorizado.');
+   message('Acesso recusado: esta conta não está autorizada como administradora no backend NOVA Táxi.');
    return;
   }
   $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');
@@ -120,7 +105,10 @@ async function enter(session){
   refreshTimer=setInterval(()=>{if(currentSection==='gps')loadSection('gps')},5000);
  }catch(e){
   await client.auth.signOut();
-  message('Não foi possível validar o perfil. '+(e.message||'Erro sem detalhe.')+' A sessão foi terminada por segurança.');
+  const detail=String(e.message||'');
+  message(detail.includes('ADMIN_REQUIRED')||detail.includes('permissões de administrador')
+   ? 'Acesso recusado: o backend não reconhece esta conta como administradora autorizada.'
+   : 'Não foi possível validar o perfil no backend administrativo. '+(detail||'Erro sem detalhe.')+' A sessão foi terminada por segurança.');
  }
 }
 $('form').addEventListener('submit',async e=>{e.preventDefault();const b=$('submit');b.disabled=true;b.textContent='A validar…';message('');try{const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;await enter(data.session)}catch(e){message(e.message==='Invalid login credentials'?'Credenciais incorretas.':e.message||'Falha de autenticação.')}finally{b.disabled=false;b.textContent='Entrar com segurança'}});
