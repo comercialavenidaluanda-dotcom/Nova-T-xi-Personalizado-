@@ -41,15 +41,15 @@ private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabase
 
 @Serializable
 data class TaxiProfile(
-    @SerialName("user_id") val userId: String,
-    val role: String,
-    @SerialName("full_name") val fullName: String,
-    val email: String? = null,
-    val phone: String? = null
+    val id: String,
+    @SerialName("tipo_utilizador") val tipoUtilizador: String,
+    val nome: String? = null,
+    val telefone: String? = null,
+    val ativo: Boolean? = true
 )
 
 @Serializable
-data class TaxiDriverProfile(@SerialName("user_id") val userId: String)
+data class TaxiDriverProfile(val id: String)
 
 @Serializable
 data class DriverLocationPayload(
@@ -239,25 +239,23 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         }
                     } else {
                         val existing = supabase.from("nova_taxi_profiles").select {
-                            filter { eq("user_id", uid) }
+                            filter { eq("id", uid) }
                         }.decodeList<TaxiProfile>().firstOrNull()
                         val effectiveRole: String
                         if (existing == null) {
-                            val profile = TaxiProfile(userId = uid, role = role, fullName = name.trim(), email = email.trim().lowercase())
-                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "user_id" }
+                            val profile = TaxiProfile(
+                                id = uid,
+                                tipoUtilizador = if (role == "DRIVER") "motorista" else "passageiro",
+                                nome = name.trim(),
+                                ativo = true
+                            )
+                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "id" }
                             if (role == "DRIVER") {
-                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "user_id" }
+                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(id = uid)) { onConflict = "id" }
                             }
                             effectiveRole = role
                         } else {
-                            effectiveRole = existing.role
-                            if (existing.email.isNullOrBlank()) {
-                                supabase.from("nova_taxi_profiles").update({
-                                    set("email", email.trim().lowercase())
-                                }) {
-                                    filter { eq("user_id", uid) }
-                                }
-                            }
+                            effectiveRole = if (existing.tipoUtilizador.equals("motorista", ignoreCase = true)) "DRIVER" else "PASSENGER"
                         }
                         loggedUid = uid
                         loggedRole = effectiveRole
