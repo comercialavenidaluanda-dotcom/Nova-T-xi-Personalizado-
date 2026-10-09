@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <application
+        android:icon="@drawable/ic_nova_taxi"
+        android:roundIcon="@drawable/ic_nova_taxi"
         android:theme="@style/Theme.NovaTaxi"
         android:label="NOVA Táxi"
         android:allowBackup="false"
