@@ -78,13 +78,37 @@ Deno.serve(async (req: Request) => {
 
   try {
     if (section === "overview") {
-      const [rides, profiles, locations, payments, safety] = await Promise.all([
+      const [rides, profiles, locations, payments, safety, ridesForCharts, paymentsForCharts] = await Promise.all([
         ridesQuery(), profilesQuery(),
         admin.from("nova_taxi_driver_locations").select("motorista_id,latitude,longitude,accuracy_m,captured_at,updated_at").order("updated_at", { ascending: false }).limit(100),
         admin.from("nova_taxi_payments").select("id", { count: "exact", head: true }),
         admin.from("nova_taxi_sos_events").select("id", { count: "exact", head: true }),
+        admin.from("nova_taxi_rides").select("id,estado,criado_em,valor_final").gte("criado_em", new Date(Date.now()-13*86400000).toISOString()).order("criado_em", { ascending: false }).limit(1000),
+        admin.from("nova_taxi_payments").select("id,valor,estado,metodo,criado_em").gte("criado_em", new Date(Date.now()-13*86400000).toISOString()).order("criado_em", { ascending: false }).limit(1000),
       ]);
-      if (locations.error || payments.error || safety.error) throw locations.error ?? payments.error ?? safety.error;
+      if (locations.error || payments.error || safety.error || ridesForCharts.error || paymentsForCharts.error) throw locations.error ?? payments.error ?? safety.error ?? ridesForCharts.error ?? paymentsForCharts.error;
+      const dayKey = (value: string) => value.slice(0,10);
+      const dayLabels = Array.from({length:14},(_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(13-i));return {key:d.toISOString().slice(0,10),label:d.toLocaleDateString("pt-AO",{day:"2-digit",month:"2-digit"})};});
+      const rideDayCounts = new Map<string,number>();
+      const revenueDayTotals = new Map<string,number>();
+      const statusTotals = new Map<string,number>();
+      const paymentMethodTotals = new Map<string,number>();
+      for (const r of ridesForCharts.data ?? []) {
+        const k=dayKey(r.criado_em); rideDayCounts.set(k,(rideDayCounts.get(k)??0)+1);
+        const status=String(r.estado??"Sem estado");statusTotals.set(status,(statusTotals.get(status)??0)+1);
+      }
+      for (const p of paymentsForCharts.data ?? []) {
+        const method=String(p.metodo??"Não indicado");paymentMethodTotals.set(method,(paymentMethodTotals.get(method)??0)+1);
+        if (["pago","paid","concluido","concluído","success","succeeded"].includes(String(p.estado??"").toLowerCase())) {
+          const k=dayKey(p.criado_em);revenueDayTotals.set(k,(revenueDayTotals.get(k)??0)+Number(p.valor??0));
+        }
+      }
+      const analytics = {
+        daily_rides: dayLabels.map(d=>({label:d.label,value:rideDayCounts.get(d.key)??0})),
+        daily_revenue: dayLabels.map(d=>({label:d.label,value:revenueDayTotals.get(d.key)??0})),
+        statuses: Array.from(statusTotals,([label,value])=>({label:label.slice(0,12),value})).sort((a,b)=>b.value-a.value).slice(0,8),
+        payment_methods: Array.from(paymentMethodTotals,([label,value])=>({label:label.slice(0,12),value})).sort((a,b)=>b.value-a.value).slice(0,8),
+      };
       return reply(200, {
         counts: {
           rides: rides.length,
@@ -92,6 +116,7 @@ Deno.serve(async (req: Request) => {
           payments: payments.count ?? 0,
           safety: safety.count ?? 0,
         },
+        analytics,
         rides: rides.slice(0, 10),
         profiles,
         locations: (locations.data ?? []).map((l: any) => ({
