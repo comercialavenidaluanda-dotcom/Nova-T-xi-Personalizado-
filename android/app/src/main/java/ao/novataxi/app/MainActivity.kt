@@ -34,6 +34,7 @@ import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.maplibre.android.MapLibre
@@ -41,6 +42,9 @@ import org.maplibre.android.maps.MapView
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import java.time.Instant
+import java.net.HttpURLConnection
+import java.net.URL
+import org.json.JSONObject
 
 private const val SUPABASE_URL = "https://vgbnnikfsmprcpvtypuh.supabase.co"
 private const val SUPABASE_KEY = "%%SUPABASE_PUBLISHABLE_KEY%%"
@@ -58,6 +62,16 @@ data class TaxiProfile(
 
 @Serializable
 data class TaxiDriverProfile(@SerialName("user_id") val userId: String)
+
+@Serializable
+data class CompletedRide(
+    val id: String,
+    @SerialName("valor_final") val finalAmount: Double? = null,
+    @SerialName("origem_texto") val origin: String? = null,
+    @SerialName("destino_texto") val destination: String? = null,
+    @SerialName("criado_em") val createdAt: String? = null,
+    val estado: String = "concluida"
+)
 
 @Serializable
 data class DriverLocationPayload(
@@ -187,7 +201,18 @@ private fun NovaTaxiApp(activity: MainActivity) {
         var selectedService by remember { mutableStateOf("🚗 Corrida Cool") }
         var origin by remember { mutableStateOf("Minha localização") }
         var destination by remember { mutableStateOf("") }
-        var paymentMethod by remember { mutableStateOf("Dinheiro") }
+        var paymentMethodChoice by remember { mutableStateOf("multicaixa_reference") }
+        var paymentMobile by remember { mutableStateOf("") }
+        var paymentDetails by remember { mutableStateOf("") }
+        var paying by remember { mutableStateOf(false) }
+        var completedRide by remember { mutableStateOf<CompletedRide?>(null) }
+        LaunchedEffect(loggedUid, loggedRole) {
+            if (loggedRole == "PASSENGER" && loggedUid.isNotBlank()) {
+                completedRide = try { loadLatestCompletedRide(loggedUid) } catch (_: Exception) { null }
+            } else {
+                completedRide = null
+            }
+        }
         var requestMessage by remember { mutableStateOf("") }
         val services = listOf(
             "🚗 Corrida Cool" to "Carro para o dia a dia",
@@ -297,6 +322,97 @@ private fun NovaTaxiApp(activity: MainActivity) {
                             modifier = Modifier.fillMaxWidth()
                         ) { Text("Continuar com $selectedService") }
                         if (requestMessage.isNotBlank()) Text(requestMessage, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+            if (loggedRole == "PASSENGER") {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF1E8))
+                ) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Pagamentos seguros", style = MaterialTheme.typography.titleMedium, color = Color(0xFFB83A08))
+                        if (completedRide == null) {
+                            Text("As opções de pagamento aparecem aqui depois de uma corrida ser concluída.", style = MaterialTheme.typography.bodySmall)
+                            TextButton(onClick = {
+                                scope.launch {
+                                    paymentDetails = ""
+                                    completedRide = try { loadLatestCompletedRide(loggedUid) } catch (_: Exception) { null }
+                                    if (completedRide == null) paymentDetails = "Ainda não encontrámos uma corrida concluída para esta conta."
+                                }
+                            }) { Text("Atualizar corridas concluídas") }
+                        } else {
+                            Text("Corrida concluída: ${completedRide!!.origin ?: "Origem"} → ${completedRide!!.destination ?: "Destino"}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Total: ${completedRide!!.finalAmount?.toLong() ?: 0L} Kz", style = MaterialTheme.typography.titleLarge, color = Color(0xFFB83A08))
+                            Text("Escolha o método para iniciar a cobrança no sandbox.", style = MaterialTheme.typography.bodySmall)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                                FilterChip(
+                                    selected = paymentMethodChoice == "multicaixa_express",
+                                    onClick = { paymentMethodChoice = "multicaixa_express"; paymentDetails = "" },
+                                    label = { Text("Express") }
+                                )
+                                FilterChip(
+                                    selected = paymentMethodChoice == "multicaixa_reference",
+                                    onClick = { paymentMethodChoice = "multicaixa_reference"; paymentDetails = "" },
+                                    label = { Text("Referência") }
+                                )
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                                FilterChip(selected = false, onClick = {}, enabled = false, label = { Text("KWiK · em configuração") })
+                                FilterChip(selected = false, onClick = {}, enabled = false, label = { Text("IBAN · em configuração") })
+                            }
+                            if (paymentMethodChoice == "multicaixa_express") {
+                                OutlinedTextField(
+                                    value = paymentMobile,
+                                    onValueChange = { paymentMobile = it.filter(Char::isDigit).take(9) },
+                                    label = { Text("Número Multicaixa Express") },
+                                    placeholder = { Text("9XXXXXXXX") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true
+                                )
+                            }
+                            Button(
+                                enabled = !paying && (paymentMethodChoice != "multicaixa_express" || paymentMobile.length == 9),
+                                onClick = {
+                                    val ride = completedRide ?: return@Button
+                                    paying = true
+                                    paymentDetails = "A solicitar cobrança segura à BitPay sandbox…"
+                                    scope.launch {
+                                        try {
+                                            val token = supabase.auth.currentAccessTokenOrNull()
+                                                ?: error("A sessão expirou. Entre novamente.")
+                                            val result = withContext(Dispatchers.IO) {
+                                                requestNovaPayment(ride.id, paymentMethodChoice, paymentMobile, token)
+                                            }
+                                            val statusCode = result.first
+                                            val payload = result.second
+                                            val payment = payload.optJSONObject("payment")
+                                            val refNumber = payment?.optString("numero_referencia").orEmpty().takeUnless { it == "null" || it.isBlank() }
+                                            val entity = payment?.optString("entidade_referencia").orEmpty().takeUnless { it == "null" || it.isBlank() }
+                                            paymentDetails = when {
+                                                statusCode == 202 -> "O estado está em reconciliação. Não crie outra cobrança; atualize o estado mais tarde."
+                                                statusCode !in 200..299 -> "Não foi possível iniciar o pagamento: ${payload.optString("error", "erro desconhecido")}."
+                                                paymentMethodChoice == "multicaixa_reference" && refNumber != null -> "Referência criada no sandbox. Entidade: ${entity ?: "—"}. Referência: $refNumber. Só ficará pago após confirmação assinada do prestador."
+                                                paymentMethodChoice == "multicaixa_express" -> "Pedido enviado ao Multicaixa Express sandbox. Confirme no telemóvel de teste; o pagamento só será confirmado pelo webhook."
+                                                else -> "Pedido de pagamento registado. Estado: ${payment?.optString("estado") ?: "pendente"}."
+                                            }
+                                        } catch (e: Exception) {
+                                            paymentDetails = e.message ?: "Não foi possível contactar o serviço de pagamentos."
+                                        } finally {
+                                            paying = false
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text(if (paying) "A processar…" else "Pagar com segurança") }
+                            TextButton(onClick = {
+                                scope.launch {
+                                    completedRide = try { loadLatestCompletedRide(loggedUid) } catch (_: Exception) { completedRide }
+                                }
+                            }) { Text("Atualizar corrida") }
+                        }
+                        if (paymentDetails.isNotBlank()) Text(paymentDetails, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -446,4 +562,35 @@ private fun NovaTaxiTheme(content: @Composable () -> Unit) {
         onSecondaryContainer = Color(0xFF5B2100)
     )
     MaterialTheme(colorScheme = novaColors, content = content)
+}
+
+private suspend fun loadLatestCompletedRide(userId: String): CompletedRide? {
+    return supabase.from("nova_taxi_rides").select {
+        filter {
+            eq("passageiro_id", userId)
+            eq("estado", "concluida")
+        }
+    }.decodeList<CompletedRide>()
+        .filter { (it.finalAmount ?: 0.0) > 0.0 }
+        .maxByOrNull { it.createdAt.orEmpty() }
+}
+
+private fun requestNovaPayment(rideId: String, method: String, mobile: String, accessToken: String): Pair<Int, JSONObject> {
+    val connection = (URL("$SUPABASE_URL/functions/v1/nova-taxi-create-payment-intent").openConnection() as HttpURLConnection)
+    connection.requestMethod = "POST"
+    connection.connectTimeout = 15000
+    connection.readTimeout = 15000
+    connection.setRequestProperty("Authorization", "Bearer $accessToken")
+    connection.setRequestProperty("apikey", SUPABASE_KEY)
+    connection.setRequestProperty("Content-Type", "application/json")
+    connection.doOutput = true
+    val body = JSONObject().put("ride_id", rideId).put("payment_method", method)
+    if (method == "multicaixa_express") body.put("mobile", mobile)
+    connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+    val status = connection.responseCode
+    val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+    val responseText = stream?.bufferedReader()?.use { it.readText() } ?: "{}"
+    connection.disconnect()
+    val json = try { JSONObject(responseText) } catch (_: Exception) { JSONObject().put("error", "invalid_server_response") }
+    return status to json
 }
