@@ -5,9 +5,22 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
+val configuredSupabaseUrl = providers.gradleProperty("SUPABASE_URL")
+    .orElse(providers.environmentVariable("SUPABASE_URL"))
+    .orElse("https://vgbnnikfsmprcpvtypuh.supabase.co")
+    .get()
+val configuredSupabasePublishableKey = providers.gradleProperty("SUPABASE_PUBLISHABLE_KEY")
+    .orElse(providers.environmentVariable("SUPABASE_PUBLISHABLE_KEY"))
+    .orElse("sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp")
+    .get()
+
 android {
     namespace = "ao.novataxi.app"
     compileSdk = 36
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "ao.novataxi.app"
@@ -15,6 +28,8 @@ android {
         targetSdk = 36
         versionCode = 2
         versionName = "1.1.0"
+        buildConfigField("String", "SUPABASE_URL", "\\\"${configuredSupabaseUrl}\\\"")
+        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\\\"${configuredSupabasePublishableKey}\\\"")
     }
 
     compileOptions {
