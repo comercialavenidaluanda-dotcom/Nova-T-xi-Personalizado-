@@ -127,6 +127,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var loggedUid by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
+    var showPromo by remember { mutableStateOf(!activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).getBoolean("promo_seen_v1", false)) }
     val scope = rememberCoroutineScope()
     val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true || result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
@@ -134,6 +135,44 @@ private fun NovaTaxiApp(activity: MainActivity) {
             activity.startDriverGps(loggedUid)
             message = "Pedido de GPS iniciado. O servidor só aceitará posições após a aprovação do motorista."
         } else if (!granted) message = "Permita a localização para enviar o GPS do motorista."
+    }
+
+    if (showPromo && !logged) {
+        AlertDialog(
+            onDismissRequest = {
+                showPromo = false
+                activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
+            },
+            title = { Text("NOVA Táxi — Vamos juntos!") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Motoristas: oportunidade de ganhar até 140.000 Kz por semana*.")
+                    Text("Passageiros: 5% de desconto nas 3 primeiras corridas*.")
+                    Text("Junte-se à NOVA Táxi e faça parte da mobilidade em Angola.")
+                    Text("*Ganhos não garantidos. Valor indicativo sujeito à procura, horas trabalhadas e condições da campanha.")
+                }
+            },
+            confirmButton = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = {
+                        role = "PASSENGER"
+                        isLogin = false
+                        showPromo = false
+                        activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Quero viajar — 5% de desconto") }
+                    Button(onClick = {
+                        role = "DRIVER"
+                        isLogin = false
+                        showPromo = false
+                        activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Quero ser motorista") }
+                    TextButton(onClick = {
+                        showPromo = false
+                        activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Agora não") }
+                }
+            }
+        )
     }
 
     if (logged) {
