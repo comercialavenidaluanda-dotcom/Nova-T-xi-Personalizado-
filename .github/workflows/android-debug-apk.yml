@@ -14,10 +14,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure Supabase publishable key
+      - name: Configure NOVA Táxi Supabase publishable key
         shell: bash
         env:
-          SUPABASE_KEY: sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp
+          SUPABASE_KEY: sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK
         run: |
           set -e
           test -n "$SUPABASE_KEY"
