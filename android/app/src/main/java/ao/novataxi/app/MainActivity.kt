@@ -374,7 +374,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
                             if (paymentMethodChoice == "multicaixa_express") {
                                 OutlinedTextField(
                                     value = paymentMobile,
-                                    onValueChange = { paymentMobile = it.filter(Char::isDigit).take(9) },
+                                    onValueChange = { paymentMobile = it.filter { it.isDigit() }.take(9) },
                                     label = { Text("Número Multicaixa Express") },
                                     placeholder = { Text("9XXXXXXXX") },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
