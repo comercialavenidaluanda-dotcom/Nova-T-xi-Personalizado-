@@ -1,11 +1,15 @@
-name: NOVA Táxi — APK Debug Independente
+name: NOVA Táxi — APK Debug
 
 on:
   push:
+    branches: [main]
     paths:
       - "android/**"
       - ".github/workflows/android-debug-apk.yml"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build-apk:
@@ -13,15 +17,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Configure NOVA Táxi Supabase publishable key
-        shell: bash
-        env:
-          SUPABASE_KEY: sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK
-        run: |
-          set -e
-          test -n "$SUPABASE_KEY"
-          sed -i "s/%%SUPABASE_PUBLISHABLE_KEY%%/$SUPABASE_KEY/g" android/app/src/main/java/ao/novataxi/app/MainActivity.kt
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -32,17 +27,17 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.13"
+          gradle-version: "8.13.2"
 
       - name: Build debug APK
-        run: gradle -p android assembleDebug --no-daemon --stacktrace
+        run: gradle -p android :app:assembleDebug --no-daemon --stacktrace
 
       - name: Verify APK
         shell: bash
         run: |
-          set -e
-          APK="$(find android -type f -path "*/build/outputs/apk/debug/*.apk" -print -quit)"
-          test -n "$APK"
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
           ls -lh "$APK"
           sha256sum "$APK"
 
@@ -50,6 +45,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nova-taxi-debug-apk
-          path: android/**/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
