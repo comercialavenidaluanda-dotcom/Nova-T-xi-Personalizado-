@@ -24,6 +24,7 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -304,6 +305,11 @@ private fun NovaTaxiApp(activity: MainActivity) {
                 }
             }
         )
+    }
+
+    if (logged && showInterprovincial) {
+        InterprovincialPanel(onBack = { showInterprovincial = false })
+        return
     }
 
     if (logged) {
