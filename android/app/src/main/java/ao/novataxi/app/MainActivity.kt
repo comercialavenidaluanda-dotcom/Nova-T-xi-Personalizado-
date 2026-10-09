@@ -34,7 +34,7 @@ import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import java.time.Instant
 
-private const val SUPABASE_URL = "https://earucsaqqtbllnqsxvlb.supabase.co"
+private const val SUPABASE_URL = "https://vgbnnikfsmprcpvtypuh.supabase.co"
 private const val SUPABASE_KEY = "%%SUPABASE_PUBLISHABLE_KEY%%"
 
 private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabaseKey = SUPABASE_KEY) { install(Auth) }
@@ -176,24 +176,135 @@ private fun NovaTaxiApp(activity: MainActivity) {
     }
 
     if (logged) {
-        Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("NOVA Táxi", style = MaterialTheme.typography.headlineMedium)
-            Text(if (loggedRole == "DRIVER") "Conta de motorista" else "Conta de passageiro")
-            Text("Conta autenticada por e-mail e perfil guardado no Supabase.")
-            if (loggedRole == "DRIVER") {
-                Button(onClick = { locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS em tempo real") }
-                Text("O GPS é enviado enquanto a aplicação está aberta. O servidor bloqueia posições operacionais até à aprovação do motorista.", style = MaterialTheme.typography.bodySmall)
+        var selectedService by remember { mutableStateOf("Corrida Cool") }
+        var origin by remember { mutableStateOf("Minha localização") }
+        var destination by remember { mutableStateOf("") }
+        var paymentMethod by remember { mutableStateOf("Dinheiro") }
+        var requestMessage by remember { mutableStateOf("") }
+        val services = listOf(
+            "Corrida Cool" to "Carro para o dia a dia",
+            "Executivo" to "Viagem com mais conforto",
+            "Aeroporto" to "Transfer para aeroporto e hotéis",
+            "Restaurantes" to "Pedir comida aos restaurantes",
+            "Entregas" to "Documentos e pequenas encomendas",
+            "Pacotes" to "Enviar e receber pacotes",
+            "Supermercados" to "Compras de mercearia",
+            "Farmácia" to "Produtos de farmácia",
+            "Empresas" to "Viagens profissionais"
+        )
+        Column(
+            Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column(Modifier.weight(1f)) {
+                    Text("NOVA", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
+                    Text("Pedimos. Chegamos.", style = MaterialTheme.typography.bodyMedium)
+                }
+                TextButton(onClick = {
+                    logged = false
+                    message = ""
+                }) { Text("Sair") }
             }
-            if (message.isNotBlank()) Text(message)
-            AndroidView(factory = { ctx ->
-                MapView(ctx).apply {
-                    onCreate(null)
-                    getMapAsync { map ->
-                        map.setStyle("https://tiles.openfreemap.org/styles/liberty")
-                        map.cameraPosition = CameraPosition.Builder().target(LatLng(-8.8390, 13.2894)).zoom(11.0).build()
+            Text(
+                if (loggedRole == "DRIVER") "Área do motorista" else "O que precisa hoje?",
+                style = MaterialTheme.typography.titleLarge
+            )
+            if (loggedRole == "DRIVER") {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Painel do motorista", style = MaterialTheme.typography.titleMedium)
+                        Text("Ative a localização apenas quando estiver pronto para trabalhar. O estado operacional depende da aprovação no servidor.")
+                        Button(onClick = {
+                            locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                        }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS") }
                     }
                 }
-            }, modifier = Modifier.fillMaxWidth().weight(1f))
+            } else {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Onde vamos buscar-lhe?", style = MaterialTheme.typography.titleMedium)
+                        OutlinedTextField(
+                            value = origin,
+                            onValueChange = { origin = it },
+                            label = { Text("Origem") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = destination,
+                            onValueChange = { destination = it },
+                            label = { Text("Destino ou morada de entrega") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                        Text("Escolha um serviço", style = MaterialTheme.typography.titleMedium)
+                        services.chunked(2).forEach { rowServices ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                rowServices.forEach { item ->
+                                    val title = item.first
+                                    val subtitle = item.second
+                                    Card(
+                                        onClick = {
+                                            selectedService = title
+                                            requestMessage = ""
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (selectedService == title) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                                        )
+                                    ) {
+                                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            Text(title, style = MaterialTheme.typography.titleSmall)
+                                            Text(subtitle, style = MaterialTheme.typography.bodySmall)
+                                        }
+                                    }
+                                }
+                                if (rowServices.size == 1) Spacer(Modifier.weight(1f))
+                            }
+                        }
+                        if (selectedService == "Corrida Cool" || selectedService == "Executivo" || selectedService == "Aeroporto") {
+                            Text("Pagamento (escolha nesta fase, não no cadastro)", style = MaterialTheme.typography.titleSmall)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                listOf("Dinheiro", "Multicaixa Express", "Referência").forEach { method ->
+                                    FilterChip(
+                                        selected = paymentMethod == method,
+                                        onClick = { paymentMethod = method },
+                                        label = { Text(method) }
+                                    )
+                                }
+                            }
+                        }
+                        Button(
+                            onClick = {
+                                requestMessage = if (destination.isBlank()) {
+                                    "Indique primeiro o destino para continuar."
+                                } else {
+                                    "Serviço selecionado: $selectedService. A interface está preparada, mas o pedido real ainda precisa de ser ligado à função segura de despacho e às tabelas do Supabase; não foi criada uma corrida fictícia."
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text("Continuar com $selectedService") }
+                        if (requestMessage.isNotBlank()) Text(requestMessage, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+            Text("Mapa e localização", style = MaterialTheme.typography.titleMedium)
+            Card(Modifier.fillMaxWidth().height(250.dp)) {
+                AndroidView(factory = { ctx ->
+                    MapView(ctx).apply {
+                        onCreate(null)
+                        getMapAsync { map ->
+                            map.setStyle("https://tiles.openfreemap.org/styles/liberty")
+                            map.cameraPosition = CameraPosition.Builder().target(LatLng(-8.8390, 13.2894)).zoom(11.0).build()
+                        }
+                    }
+                }, modifier = Modifier.fillMaxSize())
+            }
+            Text("Serviços NOVA", style = MaterialTheme.typography.titleMedium)
+            Text("Corridas, transfer aeroporto/hotel, restaurantes, entregas, pacotes, supermercados, farmácia e soluções para empresas.")
+            if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall)
+            Text("A disponibilidade real, tarifas, motoristas, encomendas e pagamentos devem vir do backend; esta interface não apresenta dados de demonstração.", style = MaterialTheme.typography.bodySmall)
         }
         return
     }
