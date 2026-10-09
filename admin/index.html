@@ -90,9 +90,38 @@ async function loadSection(section){
 }
 async function enter(session){
  if(!session)return;
- try{const {data,error}=await client.from('nova_taxi_profiles').select('role,status').eq('user_id',session.user.id).maybeSingle();if(error)throw error;if(!data||String(data.role).toUpperCase()!=='ADMIN'||String(data.status).toUpperCase()!=='ACTIVE'){await client.auth.signOut();message('Acesso recusado: perfil ADMIN ativo não encontrado.');return}
- $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');await loadSection('overview');if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(currentSection==='gps')loadSection('gps')},5000)
- }catch(e){await client.auth.signOut();message('Não foi possível validar o perfil. '+(e.message||''))}
+ try{
+  const {data,error}=await client.from('nova_taxi_profiles')
+   .select('role,status').eq('user_id',session.user.id).maybeSingle();
+  if(error){
+   const code=String(error.code||'');
+   const detail=code==='42501'
+    ? 'A consulta foi bloqueada por permissões/RLS (42501). Verifique a política SELECT do perfil do próprio utilizador.'
+    : code==='PGRST205'||code==='42P01'
+     ? 'A tabela nova_taxi_profiles não foi encontrada no schema consultado.'
+     : code==='PGRST116'
+      ? 'A consulta do perfil devolveu um resultado incompatível.'
+      : (error.message||'Erro sem detalhe devolvido pelo Supabase.');
+   throw new Error(detail+' Código: '+(code||'não informado')+'.');
+  }
+  if(!data){
+   await client.auth.signOut();
+   message('Acesso recusado: a conta autenticou, mas não foi encontrado perfil em nova_taxi_profiles para este user_id. Confirme o projeto Supabase e o user_id; não crie perfil ADMIN automaticamente.');
+   return;
+  }
+  if(String(data.role||'').toUpperCase()!=='ADMIN'||String(data.status||'').toUpperCase()!=='ACTIVE'){
+   await client.auth.signOut();
+   message('Acesso recusado: o perfil existe, mas role/status não autorizam o acesso. É necessário ADMIN e ACTIVE, configurados por um administrador autorizado.');
+   return;
+  }
+  $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');
+  await loadSection('overview');
+  if(refreshTimer)clearInterval(refreshTimer);
+  refreshTimer=setInterval(()=>{if(currentSection==='gps')loadSection('gps')},5000);
+ }catch(e){
+  await client.auth.signOut();
+  message('Não foi possível validar o perfil. '+(e.message||'Erro sem detalhe.')+' A sessão foi terminada por segurança.');
+ }
 }
 $('form').addEventListener('submit',async e=>{e.preventDefault();const b=$('submit');b.disabled=true;b.textContent='A validar…';message('');try{const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;await enter(data.session)}catch(e){message(e.message==='Invalid login credentials'?'Credenciais incorretas.':e.message||'Falha de autenticação.')}finally{b.disabled=false;b.textContent='Entrar com segurança'}});
 document.querySelectorAll('[data-section]').forEach(b=>b.addEventListener('click',()=>loadSection(b.dataset.section)));
