@@ -29,6 +29,8 @@ Deno.serve(async(req:Request)=>{
  const id=crypto.randomUUID();
  const {error:ie}=await db.from("nova_taxi_payment_attempts").insert({id,corrida_id:rideId,pagador_id:u.user.id,metodo:method,valor:amount,moeda:"AOA",estado:"PENDING",prestador:"bitpay",chave_idempotencia:id});
  if(ie)return out({error:ie.code==="23505"?"active_payment_exists":"attempt_create_failed"},ie.code==="23505"?409:500);
+ const {error:preSummaryError}=await db.from("nova_taxi_payments").upsert({corrida_id:rideId,metodo,valor:amount,estado:"pendente",prestador:"bitpay",moeda:"AOA",chave_idempotencia:id},{onConflict:"corrida_id"});
+ if(preSummaryError){await db.from("nova_taxi_payment_attempts").update({estado:"FAILED",codigo_erro:"summary_failed"}).eq("id",id);return out({error:"summary_failed"},500)}
  const payload:any={amount,currency:"AOA",payment_method:method,merchant_reference:("NOVA-"+rideId).slice(0,64),metadata:{nova_ride_id:rideId,nova_attempt_id:id}};
  if(mobile)payload.customer={mobile};
  let res:Response;
@@ -37,9 +39,9 @@ Deno.serve(async(req:Request)=>{
  const data:any=await res.json().catch(()=>({}));
  if(!res.ok||!data?.id){const code=String(data?.error?.code??"provider_request_failed");await db.from("nova_taxi_payment_attempts").update({estado:"FAILED",codigo_erro:code.slice(0,120),atualizado_em:new Date().toISOString()}).eq("id",id);return out({error:"bitpay_request_failed",code},502)}
  const ref=data.reference??{},expiry=ref.expires_at??null;
- const {data:saved,error:se}=await db.from("nova_taxi_payment_attempts").update({prestador_pagamento_id:data.id,entidade_referencia:ref.entity??null,numero_referencia:ref.number??null,expira_em:expiry,estado:data.status==="PROCESSING"?"PROCESSING":"PENDING",atualizado_em:new Date().toISOString()}).eq("id",id).select("id,metodo,valor,moeda,estado,prestador_pagamento_id,entidade_referencia,numero_referencia,expira_em").single();
+ const {data:saved,error:se}=await db.from("nova_taxi_payment_attempts").update({prestador_pagamento_id:data.id,entidade_referencia:ref.entity??null,numero_referencia:ref.number??null,expira_em:expiry,estado:data.status==="PROCESSING"?"PROCESSING":"PENDING",atualizado_em:new Date().toISOString()}).eq("id",id).in("estado",["PENDING","PROCESSING","UNKNOWN"]).select("id,metodo,valor,moeda,estado,prestador_pagamento_id,entidade_referencia,numero_referencia,expira_em").single();
  if(se||!saved)return out({error:"provider_created_local_state_unknown",attempt_id:id},202);
- const {error:summaryError}=await db.from("nova_taxi_payments").upsert({corrida_id:rideId,metodo,valor:amount,estado:"pendente",prestador:"bitpay",prestador_pagamento_id:data.id,entidade_referencia:ref.entity??null,numero_referencia:ref.number??null,expira_em:expiry,moeda:"AOA",chave_idempotencia:id},{onConflict:"corrida_id"});
+ const {error:summaryError}=await db.from("nova_taxi_payments").update({prestador:"bitpay",prestador_pagamento_id:data.id,entidade_referencia:ref.entity??null,numero_referencia:ref.number??null,expira_em:expiry,chave_idempotencia:id}).eq("corrida_id",rideId);
  if(summaryError)return out({payment:saved,warning:"summary_sync_pending",confirmed:false},202);
  return out({payment:saved,confirmed:false,environment:"sandbox"},201);
 });
