@@ -1,0 +1,20 @@
+create table if not exists public.nova_taxi_payment_attempts (
+  id uuid primary key default gen_random_uuid(),
+  corrida_id uuid not null references public.nova_taxi_rides(id) on delete restrict,
+  pagador_id uuid not null references auth.users(id) on delete restrict,
+  metodo text not null check (metodo in ('multicaixa_express','multicaixa_reference')),
+  valor integer not null check (valor > 0),
+  moeda text not null default 'AOA' check (moeda='AOA'),
+  estado text not null default 'PENDING' check (estado in ('PENDING','PROCESSING','SUCCEEDED','FAILED','UNKNOWN','EXPIRED','CANCELLED','REFUNDED')),
+  prestador text not null default 'bitpay',
+  prestador_pagamento_id text unique,
+  entidade_referencia text,
+  numero_referencia text,
+  expira_em timestamptz,
+  chave_idempotencia text not null unique,
+  codigo_erro text,
+  taxa_prestador integer not null default 0 check (taxa_prestador >= 0),
+  pago_em timestamptz,
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
+);
