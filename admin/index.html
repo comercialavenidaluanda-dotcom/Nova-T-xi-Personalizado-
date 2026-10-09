@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-AO">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NOVA Táxi — Administração</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#1c2434;background:#f4f6fa}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1150px;margin:auto;padding:24px}.brand{font-size:23px;font-weight:850;display:flex;align-items:center;gap:12px}.logo{background:#f4c84b;border-radius:12px;padding:10px 14px}.muted{color:#737d90}.login{max-width:430px;margin:8vh auto;background:white;padding:28px;border:1px solid #e5e8ef;border-radius:20px}.field{display:grid;gap:7px;margin:16px 0}.field label{font-weight:700;font-size:13px}.field input{padding:13px;border:1px solid #dce1eb;border-radius:10px;font:inherit;width:100%}.btn{background:#f4c84b;border:0;border-radius:10px;padding:13px 16px;font-weight:800;cursor:pointer;width:100%}.msg{font-size:13px;color:#a53d31;line-height:1.5}.hidden{display:none!important}.layout{display:grid;grid-template-columns:220px 1fr;gap:22px;margin-top:30px}.side,.panel,.metric{background:white;border:1px solid #e6e9f0;border-radius:16px;padding:18px}.side a{display:block;padding:12px;text-decoration:none;color:#4c566a;border-radius:9px}.side a:first-of-type{background:#fff2c6;color:#202638;font-weight:800}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.metric small{color:#778195}.metric strong{display:block;font-size:25px;margin:12px 0}.cols{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}.row{display:flex;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #eef0f4;font-size:13px}.warn{background:#fff8e2;border:1px solid #f4df9b;padding:13px;border-radius:11px;font-size:13px;line-height:1.5}.logout{width:auto;background:white;border:1px solid #dfe3eb}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}@media(max-width:760px){.wrap{padding:15px}.layout{grid-template-columns:1fr}.side{display:flex;gap:5px;overflow:auto}.side a{white-space:nowrap}.metrics{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}}
+</style>
+</head><body>
+<div id="login" class="login">
+<div class="brand"><span class="logo">N</span><span>NOVA Táxi</span></div>
+<p class="muted">Painel administrativo · acesso restrito</p>
+<div class="warn">A autenticação utiliza Supabase Auth. Configure a chave pública do projeto no bloco de configuração deste ficheiro antes de publicar.</div>
+<form id="form">
+<div class="field"><label for="email">E-mail do administrador</label><input id="email" type="email" autocomplete="username" required placeholder="E-mail autorizado"></div>
+<div class="field"><label for="password">Palavra-passe</label><input id="password" type="password" autocomplete="current-password" required></div>
+<button class="btn" id="submit" type="submit">Entrar com segurança</button><p id="message" class="msg" role="alert"></p>
+</form><p class="muted" style="font-size:12px">O acesso só é concedido quando o perfil correspondente está marcado como ADMIN e ACTIVE no Supabase.</p>
+</div>
+<div id="dashboard" class="wrap hidden">
+<div class="top"><div class="brand"><span class="logo">N</span><span>NOVA Táxi <span class="muted">/ Administração</span></span></div><button id="logout" class="btn logout">Terminar sessão</button></div>
+<div class="layout"><nav class="side"><a href="#overview">Visão geral</a><a href="#rides">Corridas</a><a href="#drivers">Motoristas</a><a href="#passengers">Passageiros</a><a href="#payments">Pagamentos</a><a href="#commission">Comissões</a><a href="#gps">GPS em tempo real</a><a href="#safety">Segurança</a><a href="#audit">Auditoria</a></nav>
+<main><h1>Centro de controlo</h1><p class="muted">Estado de ligação e operações do serviço.</p>
+<div class="metrics"><div class="metric"><small>Corridas em curso</small><strong id="ridesCount">—</strong><small>Dados reais, quando autorizados</small></div><div class="metric"><small>Motoristas</small><strong id="driversCount">—</strong><small>Perfis registados</small></div><div class="metric"><small>Pagamentos</small><strong id="paymentsCount">—</strong><small>Registos existentes</small></div><div class="metric"><small>Eventos de segurança</small><strong id="safetyCount">—</strong><small>Eventos registados</small></div></div>
+<div class="cols"><section class="panel"><h3>Operações recentes</h3><div id="operations" class="muted">A carregar dados autorizados…</div></section><section class="panel"><h3>Estado da integração</h3><div class="row"><span>Supabase Auth</span><b id="authStatus">A verificar</b></div><div class="row"><span>Perfil de administrador</span><b id="roleStatus">A verificar</b></div><div class="row"><span>GPS de motoristas</span><b id="gpsStatus">Sem confirmação</b></div><div class="row"><span>Dados de pagamento</span><b id="payStatus">A verificar</b></div><p class="muted" style="font-size:12px">Sem dados fictícios. A presença de tabelas não significa que o GPS ou os pagamentos estejam operacionais.</p></section></div>
+</main></div></div>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SUPABASE_URL='https://earucsaqqtbllnqsxvlb.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='SUBSTITUIR_PELA_CHAVE_PUBLISHABLE_DO_PROJETO';
+const $=id=>document.getElementById(id), clientReady=SUPABASE_PUBLISHABLE_KEY!=='SUBSTITUIR_PELA_CHAVE_PUBLISHABLE_DO_PROJETO';
+const client=clientReady?createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
+function message(s){$('message').textContent=s}
+async function enter(session){
+ if(!session)return;
+ const {data:profile,error}=await client.from('nova_taxi_profiles').select('role,status').eq('id',session.user.id).maybeSingle();
+ if(error){await client.auth.signOut();message('Não foi possível validar o perfil administrador. Verifique a política RLS da tabela nova_taxi_profiles.');return}
+ if(!profile||String(profile.role).toUpperCase()!=='ADMIN'||String(profile.status).toUpperCase()!=='ACTIVE'){await client.auth.signOut();message('Acesso recusado: perfil ADMIN ativo não encontrado.');return}
+ $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('authStatus').textContent='Ligado';$('roleStatus').textContent='ADMIN ativo';
+ await loadDashboard();
+}
+async function count(table,filters){
+ try{let q=client.from(table).select('*',{count:'exact',head:true});if(filters)q=filters(q);const r=await q;if(r.error)throw r.error;return r.count??0}catch(e){return 'Sem acesso'}
+}
+async function loadDashboard(){
+ const [rides,drivers,payments,safety]=await Promise.all([count('nova_taxi_rides'),count('nova_taxi_driver_profiles'),count('nova_taxi_payments'),count('nova_taxi_safety_events')]);
+ $('ridesCount').textContent=rides;$('driversCount').textContent=drivers;$('paymentsCount').textContent=payments;$('safetyCount').textContent=safety;
+ $('gpsStatus').textContent='Tabela configurada; transmissão não confirmada';$('payStatus').textContent=payments==='Sem acesso'?'Sem acesso':'Consulta disponível';
+ try{const {data,error}=await client.from('nova_taxi_rides').select('id,status,created_at').order('created_at',{ascending:false}).limit(5);if(error)throw error;$('operations').innerHTML=data.length?data.map(r=>'<div class="row"><span>Corrida '+String(r.id).slice(0,8)+' · '+String(r.status??'estado desconhecido')+'</span><b>'+new Date(r.created_at).toLocaleString('pt-AO')+'</b></div>').join(''):'Sem corridas registadas.'}catch(e){$('operations').textContent='Não foi possível ler as corridas. Verifique as políticas RLS e permissões de leitura.'}
+}
+$('form').addEventListener('submit',async e=>{e.preventDefault();if(!clientReady){message('Falta configurar a chave publishable do Supabase neste ficheiro. Não introduza a palavra-passe até concluir esta configuração.');return}const b=$('submit');b.disabled=true;b.textContent='A validar…';message('');try{const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;await enter(data.session)}catch(e){message(e.message==='Invalid login credentials'?'Credenciais incorretas.':e.message||'Falha de autenticação.')}finally{b.disabled=false;b.textContent='Entrar com segurança'}});
+$('logout').addEventListener('click',async()=>{if(client)await client.auth.signOut();$('dashboard').classList.add('hidden');$('login').classList.remove('hidden');$('password').value=''});
+if(client){const {data:{session}}=await client.auth.getSession();if(session)await enter(session)}
+</script></body></html>
