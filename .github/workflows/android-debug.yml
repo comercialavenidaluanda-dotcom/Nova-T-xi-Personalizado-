@@ -5,6 +5,7 @@ on:
     branches: ["**"]
     paths:
       - "android/**"
+      - "supabase/migrations/**"
       - ".github/workflows/android-debug.yml"
   pull_request:
     paths:
