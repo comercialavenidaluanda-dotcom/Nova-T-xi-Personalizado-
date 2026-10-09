@@ -3,6 +3,10 @@ package ao.novataxi.app
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.content.Intent
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +29,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.handleDeeplinks
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
 import kotlinx.serialization.json.buildJsonObject
@@ -45,7 +50,10 @@ private const val SUPABASE_URL = "https://vgbnnikfsmprcpvtypuh.supabase.co"
 private const val SUPABASE_KEY = BuildConfig.SUPABASE_PUBLISHABLE_KEY
 
 private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabaseKey = SUPABASE_KEY) {
-    install(Auth)
+    install(Auth) {
+        scheme = "ao.novataxi.app"
+        host = "auth"
+    }
     install(Postgrest)
 }
 
@@ -84,7 +92,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         MapLibre.getInstance(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        if (SUPABASE_KEY.isBlank()) {
+            android.widget.Toast.makeText(this, "Configuração Supabase ausente. Configure SUPABASE_PUBLISHABLE_KEY.", android.widget.Toast.LENGTH_LONG).show()
+        }
+        supabase.handleDeeplinks(intent)
         setContent { NovaTaxiApp(this) }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        supabase.handleDeeplinks(intent)
     }
 
     fun startDriverGps(driverId: String) {
@@ -149,6 +167,26 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var busy by remember { mutableStateOf(false) }
     var showPromo by remember { mutableStateOf(!activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).getBoolean("promo_seen_v1", false)) }
     val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        try {
+            val uid = supabase.auth.currentUserOrNull()?.id
+            if (uid != null) {
+                val profile = supabase.from("nova_taxi_profiles").select {
+                    filter { eq("id", uid) }
+                }.decodeList<TaxiProfile>().firstOrNull()
+                if (profile != null && profile.ativo) {
+                    loggedUid = uid
+                    loggedRole = if (profile.tipoUtilizador == "motorista") "DRIVER" else "PASSENGER"
+                    logged = true
+                    message = if (loggedRole == "DRIVER") "Sessão restaurada. A operação depende da aprovação administrativa." else "Sessão restaurada."
+                }
+            }
+        } catch (e: Exception) {
+            message = "Não foi possível restaurar a sessão. Entre novamente se necessário."
+            android.util.Log.w("NOVA_TAXI_AUTH", "Falha ao restaurar sessão/perfil", e)
+        }
+    }
+
     val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true || result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted && loggedRole == "DRIVER") {
@@ -176,29 +214,64 @@ private fun NovaTaxiApp(activity: MainActivity) {
                 showPromo = false
                 activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
             },
-            title = { Text("NOVA Táxi — Vamos juntos!") },
+            title = {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xFF3A1837))
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text("NOVA TÁXI", color = Color(0xFFFFF5E8), style = MaterialTheme.typography.labelLarge)
+                    Text("A cidade move-se contigo.", color = Color(0xFFFFF5E8), style = MaterialTheme.typography.headlineSmall)
+                    Text("Pedimos. Chegamos.", color = Color(0xFFB9E769), style = MaterialTheme.typography.bodyMedium)
+                }
+            },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Motoristas: oportunidade de ganhar até 140.000 Kz por semana*.")
-                    Text("Passageiros: 5% de desconto nas 3 primeiras corridas*.")
-                    Text("Junte-se à NOVA Táxi e faça parte da mobilidade em Angola.")
-                    Text("*Ganhos não garantidos. Valor indicativo sujeito à procura, horas trabalhadas e condições da campanha.")
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                        AsyncImage(
+                            model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=480&q=85",
+                            contentDescription = "Fotografia ilustrativa de uma passageira",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.weight(1f).height(112.dp).clip(RoundedCornerShape(14.dp))
+                        )
+                        AsyncImage(
+                            model = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=480&q=85",
+                            contentDescription = "Fotografia ilustrativa de um motorista",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.weight(1f).height(112.dp).clip(RoundedCornerShape(14.dp))
+                        )
+                    }
+                    Text("VIAJA COM MAIS VANTAGENS", color = Color(0xFFF46B45), style = MaterialTheme.typography.labelLarge)
+                    Text("Passageiros: 5% de desconto nas 3 primeiras corridas*, com condições da campanha.")
+                    Text("Motoristas: possibilidade de ganhar até 140.000 Kz por semana*, dependendo da procura e das horas trabalhadas.")
+                    Text("Junte-se à mobilidade em Angola. Imagens ilustrativas; as pessoas fotografadas não representam testemunhos de clientes.")
+                    Text("*Ganhos não garantidos. Oferta sujeita às condições oficiais da campanha.", style = MaterialTheme.typography.bodySmall)
                 }
             },
             confirmButton = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = {
-                        role = "PASSENGER"
-                        isLogin = false
-                        showPromo = false
-                        activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Quero viajar — 5% de desconto") }
-                    Button(onClick = {
-                        role = "DRIVER"
-                        isLogin = false
-                        showPromo = false
-                        activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Quero ser motorista") }
+                    Button(
+                        onClick = {
+                            role = "PASSENGER"
+                            isLogin = false
+                            showPromo = false
+                            activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF46B45), contentColor = Color(0xFF3A1837))
+                    ) { Text("Quero viajar") }
+                    Button(
+                        onClick = {
+                            role = "DRIVER"
+                            isLogin = false
+                            showPromo = false
+                            activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB9E769), contentColor = Color(0xFF3A1837))
+                    ) { Text("Quero ser motorista") }
                     TextButton(onClick = {
                         showPromo = false
                         activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
@@ -251,7 +324,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
             scope.launch {
                 try {
                     if (!isLogin) {
-                        supabase.auth.signUpWith(Email) {
+                        supabase.auth.signUpWith(Email, redirectUrl = "ao.novataxi.app://auth/callback") {
                             this.email = email.trim().lowercase()
                             this.password = password
                             data = buildJsonObject {
