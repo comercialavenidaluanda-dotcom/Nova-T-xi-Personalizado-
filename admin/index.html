@@ -75,7 +75,14 @@ function renderModulePending(section){
  box.append(el('p','muted','Esta secção foi adicionada ao painel de trabalho, mas ainda não consulta nem altera dados. A ligação segura ao backend e os testes de permissões têm de ser concluídos antes de ativar operações.'));
  const items=section==='fleets'?['Empresas e planos de frota','Veículos e motoristas associados','Acompanhamento operacional e alertas anti-roubo']:section==='maintenance'?['Calendário e ordens de serviço','Alertas por quilometragem e prazo','Histórico e custos por veículo']:['Transportadoras aprovadas','Rotas e partidas confirmadas','Reservas, bilhetes e reconciliação de pagamentos'];
  const list=el('ul');items.forEach(x=>list.append(el('li','',x)));box.append(list);
- const note=el('div','warn','Sem dados fictícios: esta área não apresenta empresas, preços, horários, veículos ou reservas de demonstração.');box.append(note);main.append(box);return main
+ const note=el('div','warn','Sem dados fictícios: esta área não apresenta empresas, preços, horários, veículos ou reservas de demonstração.');box.append(note);
+ if(section==='interprovincial'){
+   const link=el('a','btn','Abrir gestor interprovincial');
+   link.href='./interprovincial.html';link.style.display='inline-block';link.style.textDecoration='none';link.style.marginTop='12px';link.style.color='#202638';
+   box.append(link);
+   box.append(el('p','muted small','O gestor directo exige a claim segura app_metadata.role=admin e a migração aprovada no Supabase.'));
+ }
+ main.append(box);return main
 }
 
 function renderSection(d,section){
