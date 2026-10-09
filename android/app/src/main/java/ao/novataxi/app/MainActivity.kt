@@ -85,16 +85,13 @@ data class CompletedRide(
 
 @Serializable
 data class DriverLocationPayload(
-    @SerialName("driver_id") val driverId: String,
-    val lat: Double,
-    val lng: Double,
+    @SerialName("motorista_id") val driverId: String,
+    val latitude: Double,
+    val longitude: Double,
     @SerialName("accuracy_m") val accuracyM: Double?,
-    @SerialName("speed_mps") val speedMps: Double?,
-    @SerialName("bearing_deg") val bearingDeg: Double?,
+    val heading: Double?,
     @SerialName("captured_at") val capturedAt: String,
-    @SerialName("sequence_no") val sequenceNo: Long,
-    val source: String = "FUSED",
-    @SerialName("mock_location") val mockLocation: Boolean = false
+    @SerialName("updated_at") val updatedAt: String
 )
 
 class MainActivity : ComponentActivity() {
@@ -121,17 +118,19 @@ class MainActivity : ComponentActivity() {
                 val uid = activeDriverId ?: return
                 result.locations.forEach { location ->
                     if (location.isMock) return@forEach
+                    val timestamp = Instant.ofEpochMilli(location.time).toString()
                     val payload = DriverLocationPayload(
-                        driverId = uid, lat = location.latitude, lng = location.longitude,
+                        driverId = uid,
+                        latitude = location.latitude,
+                        longitude = location.longitude,
                         accuracyM = if (location.hasAccuracy()) location.accuracy.toDouble() else null,
-                        speedMps = if (location.hasSpeed()) location.speed.toDouble() else null,
-                        bearingDeg = if (location.hasBearing()) location.bearing.toDouble() else null,
-                        capturedAt = Instant.ofEpochMilli(location.time).toString(),
-                        sequenceNo = System.currentTimeMillis()
+                        heading = if (location.hasBearing()) location.bearing.toDouble() else null,
+                        capturedAt = timestamp,
+                        updatedAt = Instant.now().toString()
                     )
                     CoroutineScope(Dispatchers.IO).launch {
-                        try { supabase.from("nova_taxi_driver_live_locations").insert(payload) }
-                        catch (_: Exception) { /* The server rejects GPS until the driver is approved. */ }
+                        try { supabase.from("nova_taxi_driver_locations").upsert(payload) { onConflict = "motorista_id" } }
+                        catch (_: Exception) { /* Server accepts GPS only for an approved, available driver. */ }
                     }
                 }
             }
