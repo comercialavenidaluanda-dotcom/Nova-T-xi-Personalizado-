@@ -17,10 +17,10 @@ jobs:
       - name: Configure NOVA Táxi Supabase publishable key
         shell: bash
         env:
-          SUPABASE_KEY: sb_publishable_npmGIVLGfRsF8L9UINRnrA_9yqmA7UK
+          SUPABASE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
         run: |
           set -e
-          test -n "$SUPABASE_KEY"
+          if [ -z "$SUPABASE_KEY" ]; then echo "Configure a variável de repositório SUPABASE_PUBLISHABLE_KEY com a publishable key do projeto NOVA Táxi."; exit 1; fi
           sed -i "s/%%SUPABASE_PUBLISHABLE_KEY%%/$SUPABASE_KEY/g" android/app/src/main/java/ao/novataxi/app/MainActivity.kt
 
       - name: Setup Java

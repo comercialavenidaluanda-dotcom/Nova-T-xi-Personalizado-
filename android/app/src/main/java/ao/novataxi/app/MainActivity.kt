@@ -57,7 +57,7 @@ data class TaxiProfile(
     @SerialName("tipo_utilizador") val role: String,
     @SerialName("nome") val fullName: String? = null,
     @SerialName("telefone") val phone: String? = null,
-    @SerialName("ativo") val active: Boolean = true,
+    @SerialName("ativo") val active: Boolean? = null,
     @SerialName("criado_em") val createdAt: String? = null,
     @SerialName("atualizado_em") val updatedAt: String? = null
 )
@@ -151,6 +151,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("PASSENGER") }
     var isLogin by remember { mutableStateOf(false) }
     var logged by remember { mutableStateOf(false) }
@@ -176,11 +177,27 @@ private fun NovaTaxiApp(activity: MainActivity) {
             },
             title = { Text("NOVA Táxi — Vamos juntos!") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Motoristas: oportunidade de ganhar até 140.000 Kz por semana*.")
-                    Text("Passageiros: 5% de desconto nas 3 primeiras corridas*.")
-                    Text("Junte-se à NOVA Táxi e faça parte da mobilidade em Angola.")
-                    Text("*Ganhos não garantidos. Valor indicativo sujeito à procura, horas trabalhadas e condições da campanha.")
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFF5A1F))) {
+                        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            NovaMark(Modifier.size(64.dp))
+                            Text("PEDIMOS. CHEGAMOS.", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                            Text("A tua cidade. O teu caminho. A tua NOVA.", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                        }
+                    }
+                    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0E6))) {
+                        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Text("🚗 PASSAGEIROS", style = MaterialTheme.typography.titleSmall, color = Color(0xFFB83A08))
+                            Text("Poupe 5% nas três primeiras corridas elegíveis.", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF6D9))) {
+                        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Text("🧡 MOTORISTAS", style = MaterialTheme.typography.titleSmall, color = Color(0xFF7A3B00))
+                            Text("Campanha indicativa de ganhos potenciais até 140.000 Kz por semana.", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    Text("Descontos sujeitos às condições da campanha. Ganhos não garantidos; variam com procura, horas trabalhadas e despesas.")
                 }
             },
             confirmButton = {
@@ -455,7 +472,16 @@ private fun NovaTaxiApp(activity: MainActivity) {
         }
         Text(if (isLogin) "Entrar com e-mail" else "Criar conta de teste por e-mail")
         if (!isLogin) {
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome completo") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome completo") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { phone = it.filter { ch -> ch.isDigit() || ch == '+' }.take(13) },
+                label = { Text("Telefone") },
+                placeholder = { Text("+244 9XXXXXXXX") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
             Text("Registar como")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = role == "PASSENGER", onClick = { role = "PASSENGER" }, label = { Text("Passageiro") })
@@ -464,9 +490,9 @@ private fun NovaTaxiApp(activity: MainActivity) {
         }
         OutlinedTextField(value = email, onValueChange = { email = it.trim() }, label = { Text("E-mail") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Palavra-passe (mínimo 8 caracteres)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), modifier = Modifier.fillMaxWidth())
-        Button(enabled = !busy && email.contains("@") && password.length >= 8 && (isLogin || name.isNotBlank()), onClick = {
+        Button(enabled = !busy && email.contains("@") && password.length >= 8 && (isLogin || (name.isNotBlank() && phone.count { it.isDigit() } >= 9)), onClick = {
             busy = true
-            message = if (isLogin) "A autenticar…" else "A criar a conta no Supabase…"
+            message = if (isLogin) "A entrar na tua conta…" else "A criar a tua conta…"
             scope.launch {
                 try {
                     if (!isLogin) {
@@ -485,9 +511,9 @@ private fun NovaTaxiApp(activity: MainActivity) {
                     if (uid == null) {
                         if (!isLogin) {
                             isLogin = true
-                            message = "Conta solicitada. Confirme o e-mail enviado pelo Supabase e depois entre com o mesmo e-mail e palavra-passe para concluir o perfil."
+                            message = "Conta criada! Enviámos um e-mail de confirmação. Abre a tua caixa de entrada e confirma o endereço antes de entrares."
                         } else {
-                            error("A autenticação não devolveu uma sessão. Confirme o e-mail e verifique as definições de Auth no Supabase.")
+                            error("Não foi possível iniciar sessão. Confirma o teu e-mail e palavra-passe. Se acabaste de criar a conta, confirma primeiro o e-mail recebido.")
                         }
                     } else {
                         val existing = supabase.from("nova_taxi_profiles").select {
@@ -496,7 +522,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         val effectiveRole: String
                         if (existing == null) {
                             val dbRole = if (role == "DRIVER") "motorista" else "passageiro"
-                            val profile = TaxiProfilePayload(id = uid, role = dbRole, fullName = name.trim())
+                            val profile = TaxiProfilePayload(id = uid, role = dbRole, fullName = name.trim(), phone = phone.trim().ifBlank { null })
                             supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "id" }
                             if (role == "DRIVER") {
                                 supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(id = uid)) { onConflict = "id" }
@@ -507,18 +533,21 @@ private fun NovaTaxiApp(activity: MainActivity) {
                             if (existing.fullName.isNullOrBlank() && name.isNotBlank()) {
                                 supabase.from("nova_taxi_profiles").update({
                                     set("nome", name.trim())
-                                }) {
-                                    filter { eq("id", uid) }
-                                }
+                                }) { filter { eq("id", uid) } }
+                            }
+                            if (existing.phone.isNullOrBlank() && phone.isNotBlank()) {
+                                supabase.from("nova_taxi_profiles").update({
+                                    set("telefone", phone.trim())
+                                }) { filter { eq("id", uid) } }
                             }
                         }
                         loggedUid = uid
                         loggedRole = effectiveRole
                         logged = true
-                        message = if (effectiveRole == "DRIVER") "Perfil guardado. A aprovação administrativa é necessária antes do GPS operacional." else "Registo concluído e guardado no Supabase."
+                        message = if (effectiveRole == "DRIVER") "Conta criada. O teu perfil de motorista será analisado antes de começares a receber viagens." else "Conta criada com sucesso. Bem-vindo à NOVA Táxi!"
                     }
                 } catch (e: Exception) {
-                    message = e.message ?: "Não foi possível concluir a operação. Verifique a configuração de Auth e as políticas RLS."
+                    message = if (isLogin) "Não foi possível entrar. Verifica o e-mail e a palavra-passe e tenta novamente." else "Não foi possível concluir o cadastro. Confirma os dados e tenta novamente. Se o problema continuar, contacta o apoio NOVA Táxi."
                 } finally {
                     busy = false
                 }
@@ -533,7 +562,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
             Text(if (isLogin) "Ainda não tenho conta — criar conta" else "Já tenho conta — entrar")
         }
         if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall)
-        Text("Registo de teste por e-mail. Não é pedido método de pagamento no cadastro.", style = MaterialTheme.typography.bodySmall)
+        Text(if (isLogin) "Entre com a conta NOVA Táxi. Se acabou de confirmar o e-mail, use a mesma conta." else "Nome e telefone são obrigatórios no cadastro. Não pedimos método de pagamento nesta etapa.", style = MaterialTheme.typography.bodySmall)
     }
 }
 
