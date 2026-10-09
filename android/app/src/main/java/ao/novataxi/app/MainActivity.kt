@@ -492,23 +492,24 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         }
                     } else {
                         val existing = supabase.from("nova_taxi_profiles").select {
-                            filter { eq("user_id", uid) }
+                            filter { eq("id", uid) }
                         }.decodeList<TaxiProfile>().firstOrNull()
                         val effectiveRole: String
                         if (existing == null) {
-                            val profile = TaxiProfile(userId = uid, role = role, fullName = name.trim(), email = email.trim().lowercase())
-                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "user_id" }
+                            val dbRole = if (role == "DRIVER") "motorista" else "passageiro"
+                            val profile = TaxiProfilePayload(id = uid, role = dbRole, fullName = name.trim())
+                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "id" }
                             if (role == "DRIVER") {
-                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "user_id" }
+                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(id = uid)) { onConflict = "id" }
                             }
                             effectiveRole = role
                         } else {
-                            effectiveRole = existing.role
-                            if (existing.email.isNullOrBlank()) {
+                            effectiveRole = if (existing.role == "motorista") "DRIVER" else "PASSENGER"
+                            if (existing.fullName.isNullOrBlank() && name.isNotBlank()) {
                                 supabase.from("nova_taxi_profiles").update({
-                                    set("email", email.trim().lowercase())
+                                    set("nome", name.trim())
                                 }) {
-                                    filter { eq("user_id", uid) }
+                                    filter { eq("id", uid) }
                                 }
                             }
                         }
