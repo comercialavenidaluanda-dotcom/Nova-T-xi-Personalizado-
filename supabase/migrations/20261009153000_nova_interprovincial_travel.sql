@@ -155,4 +155,119 @@ revoke insert, update, delete on public.nova_trip_tickets from anon, authenticat
 grant select on public.nova_transport_companies, public.nova_interprovincial_routes, public.nova_trip_schedules to authenticated;
 grant select on public.nova_trip_bookings, public.nova_trip_tickets to authenticated;
 
+
+-- Administrative writes are permitted only for JWTs carrying trusted app_metadata role=admin.
+-- Do not place admin roles in user_metadata: users can edit that claim.
+drop policy if exists "admin manages transport companies" on public.nova_transport_companies;
+create policy "admin manages transport companies" on public.nova_transport_companies
+for all to authenticated
+using ((select auth.jwt()->'app_metadata'->>'role') = 'admin')
+with check ((select auth.jwt()->'app_metadata'->>'role') = 'admin');
+
+drop policy if exists "admin manages interprovincial routes" on public.nova_interprovincial_routes;
+create policy "admin manages interprovincial routes" on public.nova_interprovincial_routes
+for all to authenticated
+using ((select auth.jwt()->'app_metadata'->>'role') = 'admin')
+with check ((select auth.jwt()->'app_metadata'->>'role') = 'admin');
+
+drop policy if exists "admin manages trip schedules" on public.nova_trip_schedules;
+create policy "admin manages trip schedules" on public.nova_trip_schedules
+for all to authenticated
+using ((select auth.jwt()->'app_metadata'->>'role') = 'admin')
+with check ((select auth.jwt()->'app_metadata'->>'role') = 'admin');
+
+drop policy if exists "admin manages bookings" on public.nova_trip_bookings;
+create policy "admin manages bookings" on public.nova_trip_bookings
+for all to authenticated
+using ((select auth.jwt()->'app_metadata'->>'role') = 'admin')
+with check ((select auth.jwt()->'app_metadata'->>'role') = 'admin');
+
+drop policy if exists "admin manages tickets" on public.nova_trip_tickets;
+create policy "admin manages tickets" on public.nova_trip_tickets
+for all to authenticated
+using ((select auth.jwt()->'app_metadata'->>'role') = 'admin')
+with check ((select auth.jwt()->'app_metadata'->>'role') = 'admin');
+
+grant insert, update, delete on public.nova_transport_companies, public.nova_interprovincial_routes, public.nova_trip_schedules, public.nova_trip_bookings, public.nova_trip_tickets to authenticated;
+grant select on public.nova_transport_settlements to authenticated;
+drop policy if exists "admin reads settlements" on public.nova_transport_settlements;
+create policy "admin reads settlements" on public.nova_transport_settlements
+for select to authenticated
+using ((select auth.jwt()->'app_metadata'->>'role') = 'admin');
+
+-- Transactional booking prevents overbooking by locking the schedule and checking
+-- the total seats in non-cancelled reservations before inserting a pending booking.
+create or replace function public.book_nova_interprovincial_trip(
+  p_schedule_id uuid,
+  p_seat_count integer,
+  p_payment_method text,
+  p_passenger_name text default null,
+  p_passenger_phone text default null
+) returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+declare
+  v_user_id uuid := auth.uid();
+  v_schedule public.nova_trip_schedules%rowtype;
+  v_booked integer;
+  v_booking_id uuid;
+begin
+  if v_user_id is null then
+    raise exception 'AUTH_REQUIRED' using errcode = '42501';
+  end if;
+  if p_seat_count is null or p_seat_count < 1 or p_seat_count > 10 then
+    raise exception 'INVALID_SEAT_COUNT' using errcode = '22023';
+  end if;
+  if p_payment_method not in ('cash','integrated') then
+    raise exception 'INVALID_PAYMENT_METHOD' using errcode = '22023';
+  end if;
+
+  select s.* into v_schedule
+  from public.nova_trip_schedules s
+  join public.nova_interprovincial_routes r on r.id = s.route_id
+  join public.nova_transport_companies c on c.id = r.company_id
+  where s.id = p_schedule_id
+    and s.status = 'published'
+    and s.departure_at > now()
+    and r.status = 'published'
+    and c.status = 'active'
+  for update of s;
+
+  if not found then
+    raise exception 'TRIP_NOT_AVAILABLE' using errcode = 'P0002';
+  end if;
+  if v_schedule.price_aoa is null then
+    raise exception 'PRICE_NOT_CONFIRMED' using errcode = '22023';
+  end if;
+  if p_payment_method = 'cash' and not v_schedule.payment_cash_enabled then
+    raise exception 'CASH_PAYMENT_NOT_AVAILABLE' using errcode = '22023';
+  end if;
+  if p_payment_method = 'integrated' and not v_schedule.payment_integrated_enabled then
+    raise exception 'INTEGRATED_PAYMENT_NOT_AVAILABLE' using errcode = '22023';
+  end if;
+
+  select coalesce(sum(b.seat_count),0)::integer into v_booked
+  from public.nova_trip_bookings b
+  where b.schedule_id = p_schedule_id
+    and b.booking_status in ('pending','confirmed');
+
+  if v_booked + p_seat_count > v_schedule.seats_total then
+    raise exception 'NOT_ENOUGH_SEATS' using errcode = '23514';
+  end if;
+
+  insert into public.nova_trip_bookings(
+    schedule_id, passenger_id, passenger_name, passenger_phone, seat_count, payment_method
+  ) values (
+    p_schedule_id, v_user_id, nullif(trim(p_passenger_name), ''),
+    nullif(trim(p_passenger_phone), ''), p_seat_count, p_payment_method
+  ) returning id into v_booking_id;
+  return v_booking_id;
+end;
+$;
+
+revoke all on function public.book_nova_interprovincial_trip(uuid, integer, text, text, text) from public, anon;
+grant execute on function public.book_nova_interprovincial_trip(uuid, integer, text, text, text) to authenticated;
+
 commit;
