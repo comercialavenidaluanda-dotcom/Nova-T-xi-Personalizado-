@@ -5,7 +5,12 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
+val supabasePublishableKey = (project.findProperty("SUPABASE_PUBLISHABLE_KEY") as String?)
+    ?: System.getenv("SUPABASE_PUBLISHABLE_KEY")
+    ?: "sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp"
+
 android {
+    buildFeatures { buildConfig = true }
     namespace = "ao.novataxi.app"
     compileSdk = 36
 
@@ -14,7 +19,9 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 2
-        versionName = "1.1.0"
+        versionName = "1.1.1"
+        buildConfigField("String", "SUPABASE_URL", "\"https://vgbnnikfsmprcpvtypuh.supabase.co\"")
+        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"$supabasePublishableKey\"")
     }
 
     compileOptions {
@@ -31,6 +38,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("io.coil-kt:coil-compose:2.7.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation(platform("io.github.jan-tennert.supabase:bom:3.5.0"))
