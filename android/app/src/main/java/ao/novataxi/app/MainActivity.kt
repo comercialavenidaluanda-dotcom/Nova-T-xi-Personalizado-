@@ -22,12 +22,17 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.camera.CameraPosition
@@ -37,19 +42,46 @@ import java.time.Instant
 private const val SUPABASE_URL = BuildConfig.SUPABASE_URL
 private const val SUPABASE_KEY = BuildConfig.SUPABASE_PUBLISHABLE_KEY
 
-private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabaseKey = SUPABASE_KEY) { install(Auth) }
+private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabaseKey = SUPABASE_KEY) {
+    install(Auth)
+    install(Postgrest)
+}
+
+@Serializable
+data class InterprovincialSchedule(
+    val id: String,
+    @SerialName("route_id") val routeId: String,
+    @SerialName("departure_at") val departureAt: String,
+    @SerialName("arrival_at") val arrivalAt: String? = null,
+    @SerialName("price_aoa") val priceAoa: Double? = null,
+    @SerialName("seats_total") val seatsTotal: Int,
+    val status: String,
+    @SerialName("payment_cash_enabled") val cashEnabled: Boolean = true,
+    @SerialName("payment_integrated_enabled") val integratedEnabled: Boolean = false
+)
+@Serializable
+data class InterprovincialRoute(
+    val id: String,
+    @SerialName("company_id") val companyId: String,
+    @SerialName("origin_province") val origin: String,
+    @SerialName("destination_province") val destination: String,
+    @SerialName("transport_mode") val transportMode: String,
+    val status: String
+)
+@Serializable
+data class InterprovincialCompany(val id: String, @SerialName("display_name") val displayName: String, val status: String)
 
 @Serializable
 data class TaxiProfile(
-    @SerialName("user_id") val userId: String,
-    val role: String,
-    @SerialName("full_name") val fullName: String,
-    val email: String? = null,
-    val phone: String? = null
+    @SerialName("id") val userId: String,
+    @SerialName("tipo_utilizador") val role: String,
+    @SerialName("nome") val fullName: String,
+    @SerialName("telefone") val phone: String? = null,
+    @SerialName("ativo") val active: Boolean = true
 )
 
 @Serializable
-data class TaxiDriverProfile(@SerialName("user_id") val userId: String)
+data class TaxiDriverProfile(@SerialName("id") val userId: String)
 
 @Serializable
 data class DriverLocationPayload(
@@ -116,6 +148,100 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+private fun InterprovincialPanel(onBack: () -> Unit) {
+    var origin by remember { mutableStateOf("Luanda") }
+    var destination by remember { mutableStateOf("Benguela") }
+    var payment by remember { mutableStateOf("cash") }
+    var schedules by remember { mutableStateOf<List<InterprovincialSchedule>>(emptyList()) }
+    var routes by remember { mutableStateOf<List<InterprovincialRoute>>(emptyList()) }
+    var companies by remember { mutableStateOf<List<InterprovincialCompany>>(emptyList()) }
+    var message by remember { mutableStateOf("Pesquise partidas reais publicadas.") }
+    var busy by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    fun searchTrips() {
+        busy = true
+        message = "A consultar partidas confirmadas no Supabase…"
+        scope.launch {
+            try {
+                val now = Instant.now().toString()
+                val foundSchedules = supabase.from("nova_trip_schedules").select {
+                    filter { eq("status", "published"); gt("departure_at", now) }
+                }.decodeList<InterprovincialSchedule>()
+                routes = supabase.from("nova_interprovincial_routes").select().decodeList<InterprovincialRoute>()
+                companies = supabase.from("nova_transport_companies").select().decodeList<InterprovincialCompany>()
+                val activeIds = companies.filter { it.status == "active" }.map { it.id }.toSet()
+                val validRoutes = routes.filter { it.status == "published" && it.companyId in activeIds &&
+                    it.origin.equals(origin.trim(), true) && it.destination.equals(destination.trim(), true) }
+                val validIds = validRoutes.map { it.id }.toSet()
+                schedules = foundSchedules.filter { it.routeId in validIds }
+                message = if (schedules.isEmpty()) "Não há partidas reais publicadas para esta pesquisa. Nenhum horário ou preço foi inventado."
+                    else "${schedules.size} partida(s) real(is) encontrada(s)."
+            } catch (e: Exception) {
+                schedules = emptyList()
+                message = "Catálogo ainda não activado ou erro de acesso: ${e.message ?: "verifique migração e RLS"}"
+            } finally { busy = false }
+        }
+    }
+
+    Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("Viagens interprovinciais", style = MaterialTheme.typography.headlineSmall)
+        Text("Transportadoras parceiras · sem dados fictícios")
+        OutlinedTextField(value = origin, onValueChange = { origin = it }, label = { Text("Origem") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = destination, onValueChange = { destination = it }, label = { Text("Destino") }, modifier = Modifier.fillMaxWidth())
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = payment == "cash", onClick = { payment = "cash" }, label = { Text("Dinheiro") })
+            FilterChip(selected = payment == "integrated", onClick = { payment = "integrated" }, label = { Text("Pagamento integrado") })
+        }
+        Button(onClick = { searchTrips() }, enabled = !busy && origin.isNotBlank() && destination.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+            Text(if (busy) "A pesquisar…" else "Pesquisar partidas reais")
+        }
+        Text(message, style = MaterialTheme.typography.bodySmall)
+        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            schedules.forEach { schedule ->
+                val route = routes.firstOrNull { it.id == schedule.routeId }
+                val company = route?.let { r -> companies.firstOrNull { it.id == r.companyId } }
+                val paymentEnabled = if (payment == "cash") schedule.cashEnabled else schedule.integratedEnabled
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(company?.displayName ?: "Transportadora parceira", style = MaterialTheme.typography.titleMedium)
+                        Text("${route?.origin ?: origin} → ${route?.destination ?: destination}")
+                        Text(if (route?.transportMode == "bus") "Autocarro" else "Viatura privada com motorista")
+                        Text("Partida: ${schedule.departureAt}")
+                        Text("Preço: ${schedule.priceAoa?.let { String.format("%,.0f Kz", it) } ?: "por confirmar"}")
+                        Text("Capacidade registada: ${schedule.seatsTotal} lugares")
+                        Button(onClick = {
+                            if (schedule.priceAoa == null) {
+                                message = "A reserva exige preço real confirmado."
+                            } else if (!paymentEnabled) {
+                                message = "Esta modalidade de pagamento não está activa para a partida."
+                            } else {
+                                busy = true
+                                scope.launch {
+                                    try {
+                                        supabase.postgrest.rpc("book_nova_interprovincial_trip", parameters = buildJsonObject {
+                                            put("p_schedule_id", schedule.id)
+                                            put("p_seat_count", 1)
+                                            put("p_payment_method", payment)
+                                        })
+                                        message = "Pedido de reserva enviado ao Supabase. Aguarde confirmação da transportadora/pagamento."
+                                    } catch (e: Exception) {
+                                        message = "Reserva não concluída: ${e.message ?: "verifique a migração, os lugares e as políticas RLS"}"
+                                    } finally { busy = false }
+                                }
+                            }
+                        }, enabled = paymentEnabled && !busy, modifier = Modifier.fillMaxWidth()) {
+                            Text(if (payment == "cash") "Reservar com dinheiro" else "Reservar com pagamento integrado")
+                        }
+                    }
+                }
+            }
+        }
+        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Voltar") }
+    }
+}
+
+@Composable
 private fun NovaTaxiApp(activity: MainActivity) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -127,7 +253,13 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var loggedUid by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
+    var showInterprovincial by remember { mutableStateOf(false) }
     var showPromo by remember { mutableStateOf(!activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).getBoolean("promo_seen_v1", false)) }
+    var tripOrigin by remember { mutableStateOf("Luanda") }
+    var tripDestination by remember { mutableStateOf("Benguela") }
+    var tripDate by remember { mutableStateOf("") }
+    var tripPassengers by remember { mutableStateOf("1") }
+    var tripSearchMessage by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true || result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
@@ -175,11 +307,83 @@ private fun NovaTaxiApp(activity: MainActivity) {
         )
     }
 
+    if (logged && showInterprovincial) {
+        InterprovincialPanel(onBack = { showInterprovincial = false })
+        return
+    }
+
     if (logged) {
         Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("NOVA Táxi", style = MaterialTheme.typography.headlineMedium)
             Text(if (loggedRole == "DRIVER") "Conta de motorista" else "Conta de passageiro")
             Text("Conta autenticada por e-mail e perfil guardado no Supabase.")
+            if (loggedRole != "DRIVER") {
+                Button(onClick = {
+                    showInterprovincial = !showInterprovincial
+                    tripSearchMessage = ""
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (showInterprovincial) "Fechar viagens interprovinciais" else "Viagens interprovinciais")
+                }
+                if (showInterprovincial) {
+                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("Viajar entre províncias", style = MaterialTheme.typography.titleLarge)
+                            Text("Indique a rota e a data pretendida.", style = MaterialTheme.typography.bodyMedium)
+                            OutlinedTextField(
+                                value = tripOrigin,
+                                onValueChange = { tripOrigin = it },
+                                label = { Text("Província de origem") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            OutlinedTextField(
+                                value = tripDestination,
+                                onValueChange = { tripDestination = it },
+                                label = { Text("Província de destino") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            OutlinedTextField(
+                                value = tripDate,
+                                onValueChange = { tripDate = it },
+                                label = { Text("Data (AAAA-MM-DD)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            OutlinedTextField(
+                                value = tripPassengers,
+                                onValueChange = { value -> if (value.all { it.isDigit() } && value.length <= 2) tripPassengers = value },
+                                label = { Text("Número de passageiros") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            Button(
+                                onClick = {
+                                    tripSearchMessage = when {
+                                        tripOrigin.isBlank() || tripDestination.isBlank() -> "Indique a origem e o destino."
+                                        tripOrigin.trim().equals(tripDestination.trim(), ignoreCase = true) -> "A origem e o destino devem ser diferentes."
+                                        !tripDate.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) -> "Indique a data no formato AAAA-MM-DD."
+                                        tripPassengers.toIntOrNull() !in 1..20 -> "Indique entre 1 e 20 passageiros."
+                                        else -> "Pesquisa preparada para ${tripOrigin.trim()} → ${tripDestination.trim()} em $tripDate. Ainda não há horários reais publicados para consultar. Não foi criada nenhuma reserva nem efectuado pagamento."
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text("Procurar viagens") }
+                            if (tripSearchMessage.isNotBlank()) {
+                                Text(tripSearchMessage, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                            }
+                            Text(
+                                "A disponibilidade, os preços e as reservas só serão apresentados após a integração dos dados reais das transportadoras.",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
             if (loggedRole == "DRIVER") {
                 Button(onClick = { locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS em tempo real") }
                 Text("O GPS é enviado enquanto a aplicação está aberta. O servidor bloqueia posições operacionais até à aprovação do motorista.", style = MaterialTheme.typography.bodySmall)
@@ -239,25 +443,19 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         }
                     } else {
                         val existing = supabase.from("nova_taxi_profiles").select {
-                            filter { eq("user_id", uid) }
+                            filter { eq("id", uid) }
                         }.decodeList<TaxiProfile>().firstOrNull()
                         val effectiveRole: String
                         if (existing == null) {
-                            val profile = TaxiProfile(userId = uid, role = role, fullName = name.trim(), email = email.trim().lowercase())
-                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "user_id" }
+                            val databaseRole = if (role == "DRIVER") "motorista" else "passageiro"
+                            val profile = TaxiProfile(userId = uid, role = databaseRole, fullName = name.trim())
+                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "id" }
                             if (role == "DRIVER") {
-                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "user_id" }
+                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "id" }
                             }
                             effectiveRole = role
                         } else {
-                            effectiveRole = existing.role
-                            if (existing.email.isNullOrBlank()) {
-                                supabase.from("nova_taxi_profiles").update({
-                                    set("email", email.trim().lowercase())
-                                }) {
-                                    filter { eq("user_id", uid) }
-                                }
-                            }
+                            effectiveRole = if (existing.role.equals("motorista", true)) "DRIVER" else "PASSENGER"
                         }
                         loggedUid = uid
                         loggedRole = effectiveRole
