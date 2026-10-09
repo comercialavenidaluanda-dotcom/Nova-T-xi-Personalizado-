@@ -9,11 +9,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -198,10 +205,13 @@ private fun NovaTaxiApp(activity: MainActivity) {
             Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column(Modifier.weight(1f)) {
-                    Text("NOVA", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
-                    Text("Pedimos. Chegamos.", style = MaterialTheme.typography.bodyMedium)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    NovaMark(Modifier.size(48.dp))
+                    Column {
+                        Text("NOVA", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+                        Text("Pedimos. Chegamos.", style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
                 TextButton(onClick = {
                     logged = false
@@ -311,8 +321,13 @@ private fun NovaTaxiApp(activity: MainActivity) {
     }
 
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("NOVA Táxi", style = MaterialTheme.typography.headlineLarge)
-        Text("Pedimos. Chegamos.")
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            NovaMark(Modifier.size(56.dp))
+            Column {
+                Text("NOVA Táxi", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
+                Text("Pedimos. Chegamos.")
+            }
+        }
         Text(if (isLogin) "Entrar com e-mail" else "Criar conta de teste por e-mail")
         if (!isLogin) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome completo") }, modifier = Modifier.fillMaxWidth())
@@ -393,6 +408,26 @@ private fun NovaTaxiApp(activity: MainActivity) {
         }
         if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall)
         Text("Registo de teste por e-mail. Não é pedido método de pagamento no cadastro.", style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+
+@Composable
+private fun NovaMark(modifier: Modifier = Modifier.size(48.dp)) {
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        drawRoundRect(
+            color = Color(0xFFFF5A1F),
+            cornerRadius = CornerRadius(w * 0.26f, h * 0.26f)
+        )
+        val road = Path().apply {
+            moveTo(w * 0.28f, h * 0.78f)
+            cubicTo(w * 0.39f, h * 0.61f, w * 0.47f, h * 0.47f, w * 0.70f, h * 0.23f)
+        }
+        drawPath(road, Color.White, style = Stroke(width = w * 0.105f, cap = StrokeCap.Round))
+        drawCircle(Color(0xFFFFC247), radius = w * 0.085f, center = Offset(w * 0.72f, h * 0.22f))
+        drawLine(Color.White, Offset(w * 0.32f, h * 0.60f), Offset(w * 0.40f, h * 0.52f), strokeWidth = w * 0.04f, cap = StrokeCap.Round)
     }
 }
 
