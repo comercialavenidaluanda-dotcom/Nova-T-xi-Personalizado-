@@ -73,15 +73,15 @@ data class InterprovincialCompany(val id: String, @SerialName("display_name") va
 
 @Serializable
 data class TaxiProfile(
-    @SerialName("user_id") val userId: String,
-    val role: String,
-    @SerialName("full_name") val fullName: String,
-    val email: String? = null,
-    val phone: String? = null
+    @SerialName("id") val userId: String,
+    @SerialName("tipo_utilizador") val role: String,
+    @SerialName("nome") val fullName: String,
+    @SerialName("telefone") val phone: String? = null,
+    @SerialName("ativo") val active: Boolean = true
 )
 
 @Serializable
-data class TaxiDriverProfile(@SerialName("user_id") val userId: String)
+data class TaxiDriverProfile(@SerialName("id") val userId: String)
 
 @Serializable
 data class DriverLocationPayload(
@@ -453,14 +453,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
                             }
                             effectiveRole = role
                         } else {
-                            effectiveRole = existing.role
-                            if (existing.email.isNullOrBlank()) {
-                                supabase.from("nova_taxi_profiles").update({
-                                    set("email", email.trim().lowercase())
-                                }) {
-                                    filter { eq("user_id", uid) }
-                                }
-                            }
+                            effectiveRole = if (existing.role.equals("motorista", true)) "DRIVER" else "PASSENGER"
                         }
                         loggedUid = uid
                         loggedRole = effectiveRole
