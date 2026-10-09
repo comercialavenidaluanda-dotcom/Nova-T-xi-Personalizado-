@@ -10,6 +10,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -72,6 +74,13 @@ data class TaxiProfilePayload(
 
 @Serializable
 data class TaxiDriverProfile(val id: String)
+
+@Serializable
+data class FleetApplicationPayload(
+    val name: String,
+    @SerialName("owner_user_id") val ownerUserId: String,
+    val status: String = "pending"
+)
 
 @Serializable
 data class CompletedRide(
@@ -215,6 +224,9 @@ private fun NovaTaxiApp(activity: MainActivity) {
         var paymentDetails by remember { mutableStateOf("") }
         var paying by remember { mutableStateOf(false) }
         var completedRide by remember { mutableStateOf<CompletedRide?>(null) }
+        var fleetNameInput by remember { mutableStateOf("") }
+        var fleetApplicationBusy by remember { mutableStateOf(false) }
+        var fleetApplicationMessage by remember { mutableStateOf("") }
         LaunchedEffect(loggedUid, loggedRole) {
             if (loggedRole == "PASSENGER" && loggedUid.isNotBlank()) {
                 completedRide = try { loadLatestCompletedRide(loggedUid) } catch (_: Exception) { null }
@@ -264,6 +276,61 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         Button(onClick = {
                             locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                         }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS") }
+                    }
+                }
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Trabalho e ganhos", style = MaterialTheme.typography.titleMedium)
+                        Text("Aqui ficarão as corridas atribuídas, o histórico e os ganhos confirmados. Não mostramos valores de demonstração.")
+                        Text("A ligação de corridas e liquidação financeira ainda está em implementação.", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Viatura, manutenção e segurança", style = MaterialTheme.typography.titleMedium)
+                        Text("Prepare documentos da viatura, revisões e alertas de segurança. A monitorização só funciona com GPS autorizado e viatura registada.")
+                        Text("O alerta automático de saída de geocerca já tem base no servidor; a ligação do painel de alertas está pendente.", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF1E8))) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Parceiros NOVA", style = MaterialTheme.typography.titleMedium, color = Color(0xFFB83A08))
+                        Text("Tem várias viaturas? Solicite a adesão da sua empresa para gerir motoristas, viaturas, manutenção e segurança numa só área.")
+                        OutlinedTextField(
+                            value = fleetNameInput,
+                            onValueChange = { fleetNameInput = it },
+                            label = { Text("Nome da empresa ou frota") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                        Button(
+                            enabled = !fleetApplicationBusy && fleetNameInput.trim().length >= 2,
+                            onClick = {
+                                fleetApplicationBusy = true
+                                fleetApplicationMessage = "A enviar pedido de adesão…"
+                                scope.launch {
+                                    try {
+                                        supabase.from("nova_taxi_fleets").insert(
+                                            FleetApplicationPayload(
+                                                name = fleetNameInput.trim(),
+                                                ownerUserId = loggedUid,
+                                                status = "pending"
+                                            )
+                                        )
+                                        fleetApplicationMessage = "Pedido enviado. A frota ficará pendente até validação administrativa."
+                                        fleetNameInput = ""
+                                    } catch (e: Exception) {
+                                        fleetApplicationMessage = e.message ?: "Não foi possível enviar o pedido. Verifique a sessão e as permissões da conta."
+                                    } finally {
+                                        fleetApplicationBusy = false
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text(if (fleetApplicationBusy) "A enviar…" else "Solicitar adesão como parceiro") }
+                        if (fleetApplicationMessage.isNotBlank()) {
+                            Text(fleetApplicationMessage, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             } else {
