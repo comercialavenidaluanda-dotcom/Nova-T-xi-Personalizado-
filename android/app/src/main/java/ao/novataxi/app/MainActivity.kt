@@ -131,6 +131,12 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var loggedUid by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
+    var showInterprovincial by remember { mutableStateOf(false) }
+    var tripOrigin by remember { mutableStateOf("Luanda") }
+    var tripDestination by remember { mutableStateOf("Benguela") }
+    var tripDate by remember { mutableStateOf("") }
+    var tripPassengers by remember { mutableStateOf("1") }
+    var tripSearchMessage by remember { mutableStateOf("") }
     var showPromo by remember { mutableStateOf(!activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).getBoolean("promo_seen_v1", false)) }
     val scope = rememberCoroutineScope()
     val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
@@ -184,6 +190,73 @@ private fun NovaTaxiApp(activity: MainActivity) {
             Text("NOVA Táxi", style = MaterialTheme.typography.headlineMedium)
             Text(if (loggedRole == "DRIVER") "Conta de motorista" else "Conta de passageiro")
             Text("Conta autenticada por e-mail e perfil guardado no Supabase.")
+            if (loggedRole != "DRIVER") {
+                Button(onClick = {
+                    showInterprovincial = !showInterprovincial
+                    tripSearchMessage = ""
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (showInterprovincial) "Fechar viagens interprovinciais" else "Viagens interprovinciais")
+                }
+                if (showInterprovincial) {
+                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("Viajar entre províncias", style = MaterialTheme.typography.titleLarge)
+                            Text("Indique a rota e a data pretendida.", style = MaterialTheme.typography.bodyMedium)
+                            OutlinedTextField(
+                                value = tripOrigin,
+                                onValueChange = { tripOrigin = it },
+                                label = { Text("Província de origem") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            OutlinedTextField(
+                                value = tripDestination,
+                                onValueChange = { tripDestination = it },
+                                label = { Text("Província de destino") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            OutlinedTextField(
+                                value = tripDate,
+                                onValueChange = { tripDate = it },
+                                label = { Text("Data (AAAA-MM-DD)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            OutlinedTextField(
+                                value = tripPassengers,
+                                onValueChange = { value -> if (value.all { it.isDigit() } && value.length <= 2) tripPassengers = value },
+                                label = { Text("Número de passageiros") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            Button(
+                                onClick = {
+                                    tripSearchMessage = when {
+                                        tripOrigin.isBlank() || tripDestination.isBlank() -> "Indique a origem e o destino."
+                                        tripOrigin.trim().equals(tripDestination.trim(), ignoreCase = true) -> "A origem e o destino devem ser diferentes."
+                                        !tripDate.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) -> "Indique a data no formato AAAA-MM-DD."
+                                        tripPassengers.toIntOrNull() !in 1..20 -> "Indique entre 1 e 20 passageiros."
+                                        else -> "Pesquisa preparada para ${tripOrigin.trim()} → ${tripDestination.trim()} em $tripDate. Ainda não há horários reais publicados para consultar. Não foi criada nenhuma reserva nem efectuado pagamento."
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text("Procurar viagens") }
+                            if (tripSearchMessage.isNotBlank()) {
+                                Text(tripSearchMessage, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                            }
+                            Text(
+                                "A disponibilidade, os preços e as reservas só serão apresentados após a integração dos dados reais das transportadoras.",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
             if (loggedRole == "DRIVER") {
                 Button(onClick = { locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS em tempo real") }
                 Text("O GPS é enviado enquanto a aplicação está aberta. O servidor bloqueia posições operacionais até à aprovação do motorista.", style = MaterialTheme.typography.bodySmall)
