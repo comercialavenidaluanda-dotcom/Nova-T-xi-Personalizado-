@@ -57,7 +57,7 @@ data class TaxiProfile(
     @SerialName("tipo_utilizador") val role: String,
     @SerialName("nome") val fullName: String? = null,
     @SerialName("telefone") val phone: String? = null,
-    @SerialName("ativo") val active: Boolean = true,
+    @SerialName("ativo") val active: Boolean? = null,
     @SerialName("criado_em") val createdAt: String? = null,
     @SerialName("atualizado_em") val updatedAt: String? = null
 )
