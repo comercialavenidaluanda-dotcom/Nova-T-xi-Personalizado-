@@ -24,11 +24,14 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.camera.CameraPosition
@@ -42,6 +45,30 @@ private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabase
     install(Auth)
     install(Postgrest)
 }
+
+@Serializable
+data class InterprovincialSchedule(
+    val id: String,
+    @SerialName("route_id") val routeId: String,
+    @SerialName("departure_at") val departureAt: String,
+    @SerialName("arrival_at") val arrivalAt: String? = null,
+    @SerialName("price_aoa") val priceAoa: Double? = null,
+    @SerialName("seats_total") val seatsTotal: Int,
+    val status: String,
+    @SerialName("payment_cash_enabled") val cashEnabled: Boolean = true,
+    @SerialName("payment_integrated_enabled") val integratedEnabled: Boolean = false
+)
+@Serializable
+data class InterprovincialRoute(
+    val id: String,
+    @SerialName("company_id") val companyId: String,
+    @SerialName("origin_province") val origin: String,
+    @SerialName("destination_province") val destination: String,
+    @SerialName("transport_mode") val transportMode: String,
+    val status: String
+)
+@Serializable
+data class InterprovincialCompany(val id: String, @SerialName("display_name") val displayName: String, val status: String)
 
 @Serializable
 data class TaxiProfile(
@@ -116,6 +143,100 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
         locationCallback = null
+    }
+}
+
+@Composable
+private fun InterprovincialPanel(onBack: () -> Unit) {
+    var origin by remember { mutableStateOf("Luanda") }
+    var destination by remember { mutableStateOf("Benguela") }
+    var payment by remember { mutableStateOf("cash") }
+    var schedules by remember { mutableStateOf<List<InterprovincialSchedule>>(emptyList()) }
+    var routes by remember { mutableStateOf<List<InterprovincialRoute>>(emptyList()) }
+    var companies by remember { mutableStateOf<List<InterprovincialCompany>>(emptyList()) }
+    var message by remember { mutableStateOf("Pesquise partidas reais publicadas.") }
+    var busy by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    fun searchTrips() {
+        busy = true
+        message = "A consultar partidas confirmadas no Supabase…"
+        scope.launch {
+            try {
+                val now = Instant.now().toString()
+                val foundSchedules = supabase.from("nova_trip_schedules").select {
+                    filter { eq("status", "published"); gt("departure_at", now) }
+                }.decodeList<InterprovincialSchedule>()
+                routes = supabase.from("nova_interprovincial_routes").select().decodeList<InterprovincialRoute>()
+                companies = supabase.from("nova_transport_companies").select().decodeList<InterprovincialCompany>()
+                val activeIds = companies.filter { it.status == "active" }.map { it.id }.toSet()
+                val validRoutes = routes.filter { it.status == "published" && it.companyId in activeIds &&
+                    it.origin.equals(origin.trim(), true) && it.destination.equals(destination.trim(), true) }
+                val validIds = validRoutes.map { it.id }.toSet()
+                schedules = foundSchedules.filter { it.routeId in validIds }
+                message = if (schedules.isEmpty()) "Não há partidas reais publicadas para esta pesquisa. Nenhum horário ou preço foi inventado."
+                    else "${schedules.size} partida(s) real(is) encontrada(s)."
+            } catch (e: Exception) {
+                schedules = emptyList()
+                message = "Catálogo ainda não activado ou erro de acesso: ${e.message ?: "verifique migração e RLS"}"
+            } finally { busy = false }
+        }
+    }
+
+    Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("Viagens interprovinciais", style = MaterialTheme.typography.headlineSmall)
+        Text("Transportadoras parceiras · sem dados fictícios")
+        OutlinedTextField(value = origin, onValueChange = { origin = it }, label = { Text("Origem") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = destination, onValueChange = { destination = it }, label = { Text("Destino") }, modifier = Modifier.fillMaxWidth())
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = payment == "cash", onClick = { payment = "cash" }, label = { Text("Dinheiro") })
+            FilterChip(selected = payment == "integrated", onClick = { payment = "integrated" }, label = { Text("Pagamento integrado") })
+        }
+        Button(onClick = { searchTrips() }, enabled = !busy && origin.isNotBlank() && destination.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+            Text(if (busy) "A pesquisar…" else "Pesquisar partidas reais")
+        }
+        Text(message, style = MaterialTheme.typography.bodySmall)
+        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            schedules.forEach { schedule ->
+                val route = routes.firstOrNull { it.id == schedule.routeId }
+                val company = route?.let { r -> companies.firstOrNull { it.id == r.companyId } }
+                val paymentEnabled = if (payment == "cash") schedule.cashEnabled else schedule.integratedEnabled
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(company?.displayName ?: "Transportadora parceira", style = MaterialTheme.typography.titleMedium)
+                        Text("${route?.origin ?: origin} → ${route?.destination ?: destination}")
+                        Text(if (route?.transportMode == "bus") "Autocarro" else "Viatura privada com motorista")
+                        Text("Partida: ${schedule.departureAt}")
+                        Text("Preço: ${schedule.priceAoa?.let { String.format("%,.0f Kz", it) } ?: "por confirmar"}")
+                        Text("Capacidade registada: ${schedule.seatsTotal} lugares")
+                        Button(onClick = {
+                            if (schedule.priceAoa == null) {
+                                message = "A reserva exige preço real confirmado."
+                            } else if (!paymentEnabled) {
+                                message = "Esta modalidade de pagamento não está activa para a partida."
+                            } else {
+                                busy = true
+                                scope.launch {
+                                    try {
+                                        supabase.postgrest.rpc("book_nova_interprovincial_trip", parameters = buildJsonObject {
+                                            put("p_schedule_id", schedule.id)
+                                            put("p_seat_count", 1)
+                                            put("p_payment_method", payment)
+                                        })
+                                        message = "Pedido de reserva enviado ao Supabase. Aguarde confirmação da transportadora/pagamento."
+                                    } catch (e: Exception) {
+                                        message = "Reserva não concluída: ${e.message ?: "verifique a migração, os lugares e as políticas RLS"}"
+                                    } finally { busy = false }
+                                }
+                            }
+                        }, enabled = paymentEnabled && !busy, modifier = Modifier.fillMaxWidth()) {
+                            Text(if (payment == "cash") "Reservar com dinheiro" else "Reservar com pagamento integrado")
+                        }
+                    }
+                }
+            }
+        }
+        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Voltar") }
     }
 }
 
