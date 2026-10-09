@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -74,7 +75,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         MapLibre.getInstance(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        setContent { NovaTaxiApp(this) }
+        setContent { NovaTaxiTheme { NovaTaxiApp(this) } }
     }
 
     fun startDriverGps(driverId: String) {
@@ -176,21 +177,22 @@ private fun NovaTaxiApp(activity: MainActivity) {
     }
 
     if (logged) {
-        var selectedService by remember { mutableStateOf("Corrida Cool") }
+        var selectedService by remember { mutableStateOf("🚗 Corrida Cool") }
         var origin by remember { mutableStateOf("Minha localização") }
         var destination by remember { mutableStateOf("") }
         var paymentMethod by remember { mutableStateOf("Dinheiro") }
         var requestMessage by remember { mutableStateOf("") }
         val services = listOf(
-            "Corrida Cool" to "Carro para o dia a dia",
-            "Executivo" to "Viagem com mais conforto",
-            "Aeroporto" to "Transfer para aeroporto e hotéis",
-            "Restaurantes" to "Pedir comida aos restaurantes",
-            "Entregas" to "Documentos e pequenas encomendas",
-            "Pacotes" to "Enviar e receber pacotes",
-            "Supermercados" to "Compras de mercearia",
-            "Farmácia" to "Produtos de farmácia",
-            "Empresas" to "Viagens profissionais"
+            "🚗 Corrida Cool" to "Carro para o dia a dia",
+            "✨ Executivo" to "Viagem com mais conforto",
+            "✈️ Transfer aeroporto/hotel" to "Transfer privado e agendado",
+            "📦 Entregas" to "Documentos e pequenas encomendas",
+            "🏍️ Moto" to "Deslocações e entregas rápidas",
+            "🛍️ Compras" to "Compras de lojas e supermercados",
+            "🛠️ Assistência rodoviária" to "Apoio quando o veículo avaria",
+            "🏢 NOVA Empresas" to "Gestão de viagens para equipas",
+            "🚘 Aluguer de viaturas" to "Aluguer sujeito a disponibilidade",
+            "🚌 Transporte coletivo" to "Viagens coletivas e lugares agendados"
         )
         Column(
             Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(16.dp),
@@ -263,15 +265,14 @@ private fun NovaTaxiApp(activity: MainActivity) {
                                 if (rowServices.size == 1) Spacer(Modifier.weight(1f))
                             }
                         }
-                        if (selectedService == "Corrida Cool" || selectedService == "Executivo" || selectedService == "Aeroporto") {
-                            Text("Pagamento (escolha nesta fase, não no cadastro)", style = MaterialTheme.typography.titleSmall)
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                listOf("Dinheiro", "Multicaixa Express", "Referência").forEach { method ->
-                                    FilterChip(
-                                        selected = paymentMethod == method,
-                                        onClick = { paymentMethod = method },
-                                        label = { Text(method) }
-                                    )
+                        if (selectedService.contains("Corrida Cool") || selectedService.contains("Executivo") || selectedService.contains("Transfer aeroporto")) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF1E8))
+                            ) {
+                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                                    Text("Pagamento seguro no fim da corrida", style = MaterialTheme.typography.titleSmall, color = Color(0xFFB83A08))
+                                    Text("Depois de o motorista encerrar a corrida, poderá escolher Multicaixa Express ou Referência Multicaixa. KWiK e IBAN serão ativados após configurar os respetivos canais.", style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
@@ -301,8 +302,8 @@ private fun NovaTaxiApp(activity: MainActivity) {
                     }
                 }, modifier = Modifier.fillMaxSize())
             }
-            Text("Serviços NOVA", style = MaterialTheme.typography.titleMedium)
-            Text("Corridas, transfer aeroporto/hotel, restaurantes, entregas, pacotes, supermercados, farmácia e soluções para empresas.")
+            Text("Serviços NOVA", style = MaterialTheme.typography.titleMedium, color = Color(0xFFB83A08))
+            Text("Corridas, transfer aeroporto/hotel, entregas, moto, compras, assistência rodoviária, NOVA Empresas, aluguer de viaturas e transporte coletivo.")
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall)
             Text("A disponibilidade real, tarifas, motoristas, encomendas e pagamentos devem vir do backend; esta interface não apresenta dados de demonstração.", style = MaterialTheme.typography.bodySmall)
         }
@@ -393,4 +394,21 @@ private fun NovaTaxiApp(activity: MainActivity) {
         if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall)
         Text("Registo de teste por e-mail. Não é pedido método de pagamento no cadastro.", style = MaterialTheme.typography.bodySmall)
     }
+}
+
+@Composable
+private fun NovaTaxiTheme(content: @Composable () -> Unit) {
+    val novaColors = lightColorScheme(
+        primary = Color(0xFFFF5A1F),
+        onPrimary = Color.White,
+        secondary = Color(0xFFFFB21A),
+        onSecondary = Color(0xFF2A160B),
+        tertiary = Color(0xFF14A878),
+        background = Color(0xFFFFFAF6),
+        surface = Color.White,
+        surfaceVariant = Color(0xFFFFF0E6),
+        secondaryContainer = Color(0xFFFFDCC8),
+        onSecondaryContainer = Color(0xFF5B2100)
+    )
+    MaterialTheme(colorScheme = novaColors, content = content)
 }
