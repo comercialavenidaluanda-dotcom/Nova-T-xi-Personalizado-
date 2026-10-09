@@ -13,7 +13,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.text.KeyboardOptions
@@ -253,7 +252,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
                             model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=480&q=85",
                             contentDescription = "Fotografia ilustrativa de uma passageira",
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.weight(1f).height(112.dp).clip(RoundedCornerShape(14.dp))
+                            modifier = Modifier.weight(1f).height(112.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFF5EDE3))
                         )
                         AsyncImage(
                             model = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=480&q=85",
