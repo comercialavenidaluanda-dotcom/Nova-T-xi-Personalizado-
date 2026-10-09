@@ -18,8 +18,10 @@ Deno.serve(async(req:Request)=>{
  const headerId=req.headers.get("BitPay-Event-Id"), eventId=headerId??evt?.id;
  if(!eventId||(headerId&&evt?.id&&headerId!==evt.id)||typeof evt?.type!=="string")return response({error:"invalid_event_identity"},400);
  const db=createClient(url,service,{auth:{persistSession:false,autoRefreshToken:false}});
- const providerId=evt?.data?.id??null;
- const {data:attempt}=providerId?await db.from("nova_taxi_payment_attempts").select("id,corrida_id").eq("prestador_pagamento_id",providerId).maybeSingle():{data:null};
+ const providerId=evt?.data?.id??null, attemptId=evt?.data?.metadata?.nova_attempt_id??null;
+ let attempt:any=null;
+ if(providerId){const q=await db.from("nova_taxi_payment_attempts").select("id,corrida_id").eq("prestador_pagamento_id",providerId).maybeSingle();attempt=q.data}
+ if(!attempt&&attemptId){const q=await db.from("nova_taxi_payment_attempts").select("id,corrida_id").eq("id",attemptId).maybeSingle();attempt=q.data}
  const {error:ins}=await db.from("nova_taxi_bitpay_webhook_events").insert({event_id:eventId,payment_attempt_id:attempt?.id??null,event_type:evt.type,provider_payment_id:providerId,livemode:evt.livemode===true});
  if(ins?.code==="23505")return response({received:true,duplicate:true});
  if(ins)return response({error:"event_persistence_failed"},500);
@@ -33,7 +35,7 @@ Deno.serve(async(req:Request)=>{
  else if(evt.type==="payment.created")state="PENDING";
  else if(status==="PROCESSING")state="PROCESSING";
  if(state){
-  const now=new Date().toISOString(), upd:any={estado:state,atualizado_em:now};
+  const now=new Date().toISOString(), upd:any={estado:state,atualizado_em:now};if(providerId)upd.prestador_pagamento_id=providerId;
   if(state==="SUCCEEDED")upd.pago_em=now;
   if(evt?.data?.failure_code)upd.codigo_erro=String(evt.data.failure_code).slice(0,120);
   const {error}=await db.from("nova_taxi_payment_attempts").update(upd).eq("id",attempt.id);
