@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -40,6 +41,20 @@ private const val SUPABASE_URL = BuildConfig.SUPABASE_URL
 private const val SUPABASE_KEY = BuildConfig.SUPABASE_PUBLISHABLE_KEY
 
 private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabaseKey = SUPABASE_KEY) { install(Auth) }
+
+private val novaOrangeColorScheme = lightColorScheme(
+    primary = Color(0xFFF26A21),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFFFDCC8),
+    onPrimaryContainer = Color(0xFF351000),
+    secondary = Color(0xFFFFA62B),
+    onSecondary = Color(0xFF2B1600),
+    tertiary = Color(0xFF6C8B3C),
+    background = Color(0xFFFFFBF7),
+    surface = Color(0xFFFFFBF7),
+    surfaceVariant = Color(0xFFFFEDE2),
+    outline = Color(0xFFB8A397)
+)
 
 @Serializable
 data class TaxiProfile(
@@ -72,7 +87,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         MapLibre.getInstance(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        setContent { NovaTaxiApp(this) }
+        setContent { MaterialTheme(colorScheme = novaOrangeColorScheme) { NovaTaxiApp(this) } }
     }
 
     fun startDriverGps(driverId: String) {
