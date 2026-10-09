@@ -91,25 +91,16 @@ async function loadSection(section){
 async function enter(session){
  if(!session)return;
  try{
-  // Autorizar no backend usando a mesma função protegida que fornece os dados administrativos.
-  // Não confiar em colunas role/status que não existem neste projeto.
-  const access=await adminRequest('overview');
-  if(!access || access.error==='ADMIN_REQUIRED'){
-   await client.auth.signOut();
-   message('Acesso recusado: esta conta não está autorizada como administradora no backend NOVA Táxi.');
-   return;
-  }
+  const {data,error}=await client.functions.invoke('nova-taxi-admin-dashboard',{body:{section:'validate'}});
+  if(error)throw new Error(error.message||'Falha ao validar acesso administrativo.');
+  if(data?.error==='ADMIN_REQUIRED'){message('Acesso recusado: esta conta ainda não está autorizada como administradora.');return}
+  if(data?.error)throw new Error(data.error);
+  if(data?.authorized!==true){message('Acesso recusado: autorização administrativa não confirmada.');return}
   $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');
   await loadSection('overview');
   if(refreshTimer)clearInterval(refreshTimer);
-  refreshTimer=setInterval(()=>{if(currentSection==='gps')loadSection('gps')},5000);
- }catch(e){
-  await client.auth.signOut();
-  const detail=String(e.message||'');
-  message(detail.includes('ADMIN_REQUIRED')||detail.includes('permissões de administrador')
-   ? 'Acesso recusado: o backend não reconhece esta conta como administradora autorizada.'
-   : 'Não foi possível validar o perfil no backend administrativo. '+(detail||'Erro sem detalhe.')+' A sessão foi terminada por segurança.');
- }
+  refreshTimer=setInterval(()=>{if(currentSection==='gps')loadSection('gps')},5000)
+ }catch(e){message('Não foi possível validar o perfil administrativo. '+(e.message||'Verifique a ligação e tente novamente.'))}
 }
 $('form').addEventListener('submit',async e=>{e.preventDefault();const b=$('submit');b.disabled=true;b.textContent='A validar…';message('');try{const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;await enter(data.session)}catch(e){message(e.message==='Invalid login credentials'?'Credenciais incorretas.':e.message||'Falha de autenticação.')}finally{b.disabled=false;b.textContent='Entrar com segurança'}});
 document.querySelectorAll('[data-section]').forEach(b=>b.addEventListener('click',()=>loadSection(b.dataset.section)));
