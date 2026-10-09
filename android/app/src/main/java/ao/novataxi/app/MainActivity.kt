@@ -62,7 +62,7 @@ private fun NovaTaxiApp() {
     if (logged) {
         Column(Modifier.fillMaxSize()) {
             Text("NOVA Táxi", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(20.dp))
-            Text("Ligado ao Tudoaqui+ • sessão autenticada", modifier = Modifier.padding(horizontal = 20.dp))
+            Text("Sessão NOVA Táxi autenticada", modifier = Modifier.padding(horizontal = 20.dp))
             Spacer(Modifier.height(12.dp))
             AndroidView(
                 factory = { context ->
