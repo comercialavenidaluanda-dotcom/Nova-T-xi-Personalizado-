@@ -1,4 +1,4 @@
--- Create the NOVA Taxi profile as part of Supabase Auth signup.
+-- Create NOVA Taxi profiles only for signups explicitly made by the NOVA Taxi app.
 -- Safe to re-run; existing profiles are preserved.
 create or replace function public.nova_taxi_handle_new_auth_user()
 returns trigger
@@ -11,9 +11,11 @@ declare
   v_name text;
   v_phone text;
 begin
-  v_role := coalesce(new.raw_user_meta_data ->> 'tipo_utilizador', 'passageiro');
-  if v_role not in ('passageiro', 'motorista') then
-    v_role := 'passageiro';
+  v_role := new.raw_user_meta_data ->> 'tipo_utilizador';
+
+  -- This Supabase project may serve other apps; do not classify their users as taxi passengers.
+  if v_role is null or v_role not in ('passageiro', 'motorista') then
+    return new;
   end if;
 
   v_name := nullif(btrim(new.raw_user_meta_data ->> 'nome'), '');
@@ -38,5 +40,4 @@ create trigger nova_taxi_on_auth_user_created
   after insert on auth.users
   for each row execute function public.nova_taxi_handle_new_auth_user();
 
--- The trigger is owned/executed server-side. Do not grant this function to clients.
 revoke all on function public.nova_taxi_handle_new_auth_user() from public, anon, authenticated;
