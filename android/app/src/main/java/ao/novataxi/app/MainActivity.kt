@@ -492,7 +492,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
         OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Palavra-passe (mínimo 8 caracteres)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), modifier = Modifier.fillMaxWidth())
         Button(enabled = !busy && email.contains("@") && password.length >= 8 && (isLogin || (name.isNotBlank() && phone.count { it.isDigit() } >= 9)), onClick = {
             busy = true
-            message = if (isLogin) "A autenticar…" else "A criar a conta no Supabase…"
+            message = if (isLogin) "A entrar na tua conta…" else "A criar a tua conta…"
             scope.launch {
                 try {
                     if (!isLogin) {
@@ -511,9 +511,9 @@ private fun NovaTaxiApp(activity: MainActivity) {
                     if (uid == null) {
                         if (!isLogin) {
                             isLogin = true
-                            message = "Conta solicitada. Confirme o e-mail enviado pelo Supabase e depois entre com o mesmo e-mail e palavra-passe para concluir o perfil."
+                            message = "Conta criada! Enviámos um e-mail de confirmação. Abre a tua caixa de entrada e confirma o endereço antes de entrares."
                         } else {
-                            error("A autenticação não devolveu uma sessão. Confirme o e-mail e verifique as definições de Auth no Supabase.")
+                            error("Não foi possível iniciar sessão. Confirma o teu e-mail e palavra-passe. Se acabaste de criar a conta, confirma primeiro o e-mail recebido.")
                         }
                     } else {
                         val existing = supabase.from("nova_taxi_profiles").select {
@@ -544,10 +544,10 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         loggedUid = uid
                         loggedRole = effectiveRole
                         logged = true
-                        message = if (effectiveRole == "DRIVER") "Perfil guardado. A aprovação administrativa é necessária antes do GPS operacional." else "Registo concluído e guardado no Supabase."
+                        message = if (effectiveRole == "DRIVER") "Conta criada. O teu perfil de motorista será analisado antes de começares a receber viagens." else "Conta criada com sucesso. Bem-vindo à NOVA Táxi!"
                     }
                 } catch (e: Exception) {
-                    message = e.message ?: "Não foi possível concluir a operação. Verifique a configuração de Auth e as políticas RLS."
+                    message = if (isLogin) "Não foi possível entrar. Verifica o e-mail e a palavra-passe e tenta novamente." else "Não foi possível concluir o cadastro. Confirma os dados e tenta novamente. Se o problema continuar, contacta o apoio NOVA Táxi."
                 } finally {
                     busy = false
                 }
