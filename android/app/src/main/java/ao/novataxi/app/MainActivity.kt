@@ -117,12 +117,12 @@ class MainActivity : ComponentActivity() {
                 result.locations.forEach { location ->
                     if (location.isMock) return@forEach
                     val payload = DriverLocationPayload(
-                        driverId = uid, lat = location.latitude, lng = location.longitude,
+                        motoristaId = uid,
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        heading = if (location.hasBearing()) location.bearing.toDouble() else null,
                         accuracyM = if (location.hasAccuracy()) location.accuracy.toDouble() else null,
-                        speedMps = if (location.hasSpeed()) location.speed.toDouble() else null,
-                        bearingDeg = if (location.hasBearing()) location.bearing.toDouble() else null,
-                        capturedAt = Instant.ofEpochMilli(location.time).toString(),
-                        sequenceNo = System.currentTimeMillis()
+                        capturedAt = Instant.ofEpochMilli(location.time).toString()
                     )
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
