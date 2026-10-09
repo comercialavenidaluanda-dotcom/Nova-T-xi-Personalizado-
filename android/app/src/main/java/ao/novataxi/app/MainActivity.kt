@@ -259,7 +259,6 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var tripDate by remember { mutableStateOf("") }
     var tripPassengers by remember { mutableStateOf("1") }
     var tripSearchMessage by remember { mutableStateOf("") }
-    var showInterprovincial by remember { mutableStateOf(false) }\n    var showPromo by remember { mutableStateOf(!activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).getBoolean("promo_seen_v1", false)) }
     val scope = rememberCoroutineScope()
     val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true || result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
