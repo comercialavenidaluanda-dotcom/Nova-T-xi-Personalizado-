@@ -37,6 +37,7 @@ $function$;
 -- Profile owners may only edit contact fields; administrator approval uses the
 -- existing private.nova_taxi_admin_set_driver_approval() server-side function.
 revoke update on public.nova_taxi_profiles from authenticated;
+revoke update (tipo_utilizador, atualizado_em) on public.nova_taxi_profiles from authenticated;
 grant update (nome, telefone) on public.nova_taxi_profiles to authenticated;
 
 drop policy if exists driver_profile_update_own on public.nova_taxi_driver_profiles;
@@ -52,4 +53,5 @@ create policy driver_profile_update_availability_own
   );
 
 revoke update on public.nova_taxi_driver_profiles from authenticated;
+revoke update (id, atualizado_em, aprovado) on public.nova_taxi_driver_profiles from authenticated;
 grant update (disponivel) on public.nova_taxi_driver_profiles to authenticated;
