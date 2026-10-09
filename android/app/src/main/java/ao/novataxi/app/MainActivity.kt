@@ -185,7 +185,7 @@ private fun NovaTaxiApp() {
                         }
 
                         Button(
-                            enabled = !loading && phone.startsWith("+") && phone.count(Char::isDigit) >= 9 &&
+                            enabled = !loading && phone.startsWith("+") && phone.count { it.isDigit() } >= 9 &&
                                 (!sent || (otp.length >= 4 && name.trim().length >= 2)),
                             onClick = {
                                 loading = true
