@@ -32,3 +32,24 @@ begin
   return new;
 end;
 $function$;
+
+-- Do not let a client promote itself, activate a disabled account, or approve itself.
+-- Profile owners may only edit contact fields; administrator approval uses the
+-- existing private.nova_taxi_admin_set_driver_approval() server-side function.
+revoke update on public.nova_taxi_profiles from authenticated;
+grant update (nome, telefone) on public.nova_taxi_profiles to authenticated;
+
+drop policy if exists driver_profile_update_own on public.nova_taxi_driver_profiles;
+drop policy if exists driver_profile_update_availability_own on public.nova_taxi_driver_profiles;
+create policy driver_profile_update_availability_own
+  on public.nova_taxi_driver_profiles
+  for update
+  to authenticated
+  using (id = (select auth.uid()))
+  with check (
+    id = (select auth.uid())
+    and (aprovado = true or disponivel = false)
+  );
+
+revoke update on public.nova_taxi_driver_profiles from authenticated;
+grant update (disponivel) on public.nova_taxi_driver_profiles to authenticated;
