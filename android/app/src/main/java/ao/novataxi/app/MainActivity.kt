@@ -41,29 +41,15 @@ private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabase
 
 @Serializable
 data class TaxiProfile(
-    @SerialName("user_id") val userId: String,
-    val role: String,
-    @SerialName("full_name") val fullName: String,
-    val email: String? = null,
-    val phone: String? = null
+    val id: String,
+    @SerialName("tipo_utilizador") val tipoUtilizador: String,
+    val nome: String? = null,
+    val telefone: String? = null,
+    val ativo: Boolean = true
 )
 
 @Serializable
-data class TaxiDriverProfile(@SerialName("user_id") val userId: String)
-
-@Serializable
-data class DriverLocationPayload(
-    @SerialName("driver_id") val driverId: String,
-    val lat: Double,
-    val lng: Double,
-    @SerialName("accuracy_m") val accuracyM: Double?,
-    @SerialName("speed_mps") val speedMps: Double?,
-    @SerialName("bearing_deg") val bearingDeg: Double?,
-    @SerialName("captured_at") val capturedAt: String,
-    @SerialName("sequence_no") val sequenceNo: Long,
-    val source: String = "FUSED",
-    @SerialName("mock_location") val mockLocation: Boolean = false
-)
+data class TaxiDriverProfile(val id: String)
 
 class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -120,10 +106,10 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
-    var role by remember { mutableStateOf("PASSENGER") }
+    var role by remember { mutableStateOf("passageiro") }
     var isLogin by remember { mutableStateOf(false) }
     var logged by remember { mutableStateOf(false) }
-    var loggedRole by remember { mutableStateOf("PASSENGER") }
+    var loggedRole by remember { mutableStateOf("passageiro") }
     var loggedUid by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
@@ -131,7 +117,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
     val scope = rememberCoroutineScope()
     val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true || result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (granted && loggedRole == "DRIVER") {
+        if (granted && loggedRole == "motorista") {
             activity.startDriverGps(loggedUid)
             message = "Pedido de GPS iniciado. O servidor só aceitará posições após a aprovação do motorista."
         } else if (!granted) message = "Permita a localização para enviar o GPS do motorista."
@@ -155,13 +141,13 @@ private fun NovaTaxiApp(activity: MainActivity) {
             confirmButton = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = {
-                        role = "PASSENGER"
+                        role = "passageiro"
                         isLogin = false
                         showPromo = false
                         activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
                     }, modifier = Modifier.fillMaxWidth()) { Text("Quero viajar — 5% de desconto") }
                     Button(onClick = {
-                        role = "DRIVER"
+                        role = "motorista"
                         isLogin = false
                         showPromo = false
                         activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).edit().putBoolean("promo_seen_v1", true).apply()
@@ -178,9 +164,9 @@ private fun NovaTaxiApp(activity: MainActivity) {
     if (logged) {
         Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("NOVA Táxi", style = MaterialTheme.typography.headlineMedium)
-            Text(if (loggedRole == "DRIVER") "Conta de motorista" else "Conta de passageiro")
+            Text(if (loggedRole == "motorista") "Conta de motorista" else "Conta de passageiro")
             Text("Conta autenticada por e-mail e perfil guardado no Supabase.")
-            if (loggedRole == "DRIVER") {
+            if (loggedRole == "motorista") {
                 Button(onClick = { locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS em tempo real") }
                 Text("O GPS é enviado enquanto a aplicação está aberta. O servidor bloqueia posições operacionais até à aprovação do motorista.", style = MaterialTheme.typography.bodySmall)
             }
@@ -206,8 +192,8 @@ private fun NovaTaxiApp(activity: MainActivity) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome completo") }, modifier = Modifier.fillMaxWidth())
             Text("Registar como")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = role == "PASSENGER", onClick = { role = "PASSENGER" }, label = { Text("Passageiro") })
-                FilterChip(selected = role == "DRIVER", onClick = { role = "DRIVER" }, label = { Text("Motorista") })
+                FilterChip(selected = role == "passageiro", onClick = { role = "passageiro" }, label = { Text("Passageiro") })
+                FilterChip(selected = role == "motorista", onClick = { role = "motorista" }, label = { Text("Motorista") })
             }
         }
         OutlinedTextField(value = email, onValueChange = { email = it.trim() }, label = { Text("E-mail") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
@@ -239,30 +225,23 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         }
                     } else {
                         val existing = supabase.from("nova_taxi_profiles").select {
-                            filter { eq("user_id", uid) }
+                            filter { eq("id", uid) }
                         }.decodeList<TaxiProfile>().firstOrNull()
                         val effectiveRole: String
                         if (existing == null) {
-                            val profile = TaxiProfile(userId = uid, role = role, fullName = name.trim(), email = email.trim().lowercase())
-                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "user_id" }
-                            if (role == "DRIVER") {
-                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "user_id" }
+                            val profile = TaxiProfile(id = uid, tipoUtilizador = role, nome = name.trim())
+                            supabase.from("nova_taxi_profiles").insert(profile)
+                            if (role == "motorista") {
+                                supabase.from("nova_taxi_driver_profiles").insert(TaxiDriverProfile(id = uid))
                             }
                             effectiveRole = role
                         } else {
-                            effectiveRole = existing.role
-                            if (existing.email.isNullOrBlank()) {
-                                supabase.from("nova_taxi_profiles").update({
-                                    set("email", email.trim().lowercase())
-                                }) {
-                                    filter { eq("user_id", uid) }
-                                }
-                            }
+                            effectiveRole = existing.tipoUtilizador
                         }
                         loggedUid = uid
                         loggedRole = effectiveRole
                         logged = true
-                        message = if (effectiveRole == "DRIVER") "Perfil guardado. A aprovação administrativa é necessária antes do GPS operacional." else "Registo concluído e guardado no Supabase."
+                        message = if (effectiveRole == "motorista") "Perfil guardado. A aprovação administrativa é necessária antes do GPS operacional." else "Registo concluído e guardado no Supabase."
                     }
                 } catch (e: Exception) {
                     message = e.message ?: "Não foi possível concluir a operação. Verifique a configuração de Auth e as políticas RLS."
