@@ -53,15 +53,25 @@ private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabase
 
 @Serializable
 data class TaxiProfile(
-    @SerialName("user_id") val userId: String,
-    val role: String,
-    @SerialName("full_name") val fullName: String,
-    val email: String? = null,
-    val phone: String? = null
+    val id: String,
+    @SerialName("tipo_utilizador") val role: String,
+    @SerialName("nome") val fullName: String? = null,
+    @SerialName("telefone") val phone: String? = null,
+    @SerialName("ativo") val active: Boolean = true,
+    @SerialName("criado_em") val createdAt: String? = null,
+    @SerialName("atualizado_em") val updatedAt: String? = null
 )
 
 @Serializable
-data class TaxiDriverProfile(@SerialName("user_id") val userId: String)
+data class TaxiProfilePayload(
+    val id: String,
+    @SerialName("tipo_utilizador") val role: String,
+    @SerialName("nome") val fullName: String,
+    @SerialName("telefone") val phone: String? = null
+)
+
+@Serializable
+data class TaxiDriverProfile(val id: String)
 
 @Serializable
 data class CompletedRide(
