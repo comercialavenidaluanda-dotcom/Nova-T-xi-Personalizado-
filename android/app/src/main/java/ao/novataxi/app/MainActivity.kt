@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.location.LocationCompat
 import com.google.android.gms.location.*
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
@@ -115,7 +116,7 @@ class MainActivity : ComponentActivity() {
             override fun onLocationResult(result: LocationResult) {
                 val uid = activeDriverId ?: return
                 result.locations.forEach { location ->
-                    if (location.isMock) return@forEach
+                    if (LocationCompat.isMock(location)) return@forEach
                     val payload = DriverLocationPayload(
                         motoristaId = uid,
                         latitude = location.latitude,
