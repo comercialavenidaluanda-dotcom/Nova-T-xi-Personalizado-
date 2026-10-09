@@ -169,6 +169,44 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    if (section === "fleet") {
+      const [fleets, members, vehicles, geofences, alerts, maintenance, subscriptions] = await Promise.all([
+        admin.from("nova_taxi_fleets").select("id,name,legal_name,tax_number,owner_user_id,status,created_at,updated_at").order("created_at", { ascending: false }).limit(limit),
+        admin.from("nova_taxi_fleet_members").select("id,fleet_id,user_id,role,status,created_at").order("created_at", { ascending: false }).limit(limit),
+        admin.from("nova_taxi_fleet_vehicles").select("id,fleet_id,taxi_vehicle_id,plate,make,model,status,current_driver_id,odometer_km,created_at,updated_at").order("created_at", { ascending: false }).limit(limit),
+        admin.from("nova_taxi_geofences").select("id,fleet_id,name,center_lat,center_lng,radius_m,enabled,rules,created_at,updated_at").order("created_at", { ascending: false }).limit(limit),
+        admin.from("nova_taxi_fleet_security_alerts").select("id,fleet_id,fleet_vehicle_id,driver_id,alert_type,severity,status,latitude,longitude,details,detected_at").order("detected_at", { ascending: false }).limit(limit),
+        admin.from("nova_taxi_fleet_maintenance").select("id,fleet_id,fleet_vehicle_id,category,description,due_at,due_odometer_km,cost_aoa,status,provider_name,completed_at,created_at").order("created_at", { ascending: false }).limit(limit),
+        admin.from("nova_taxi_fleet_subscriptions").select("id,fleet_id,plan_code,status,monthly_price_aoa,commission_percent,starts_at,renews_at,created_at").order("created_at", { ascending: false }).limit(limit),
+      ]);
+      const failure = fleets.error ?? members.error ?? vehicles.error ?? geofences.error ?? alerts.error ?? maintenance.error ?? subscriptions.error;
+      if (failure) throw failure;
+      return reply(200, {
+        fleets: fleets.data ?? [], members: members.data ?? [], vehicles: vehicles.data ?? [],
+        geofences: geofences.data ?? [], alerts: alerts.data ?? [], maintenance: maintenance.data ?? [],
+        subscriptions: subscriptions.data ?? [],
+      });
+    }
+
+    if (section === "partners") {
+      const { data, error } = await admin.from("empresas")
+        .select("id,nome,categoria,provincia,telefone,email,website,destaque,criado_em")
+        .order("criado_em", { ascending: false }).limit(limit);
+      if (error) throw error;
+      return reply(200, { data: data ?? [] });
+    }
+
+    if (section === "express") {
+      const [requests, deliveries, serviceTypes] = await Promise.all([
+        admin.from("nova_taxi_service_requests").select("id,utilizador_id,tipo_servico_id,origem_texto,origem_lat,origem_lng,destino_texto,destino_lat,destino_lng,estado,observacoes,criado_em,atualizado_em").order("criado_em", { ascending: false }).limit(limit),
+        admin.from("nova_taxi_delivery_orders").select("id,solicitante_id,motorista_id,origem_texto,origem_lat,origem_lng,destino_texto,destino_lat,destino_lng,nome_remetente,telefone_remetente,nome_destinatario,telefone_destinatario,descricao_encomenda,estado,valor_estimado,valor_final,criado_em,atualizado_em").order("criado_em", { ascending: false }).limit(limit),
+        admin.from("nova_taxi_service_types").select("id,codigo,nome,descricao,ativo,criado_em").order("criado_em", { ascending: true }).limit(limit),
+      ]);
+      const failure = requests.error ?? deliveries.error ?? serviceTypes.error;
+      if (failure) throw failure;
+      return reply(200, { requests: requests.data ?? [], deliveries: deliveries.data ?? [], service_types: serviceTypes.data ?? [] });
+    }
+
     if (section === "audit") return reply(200, { data: [] });
     return reply(400, { error: "UNKNOWN_SECTION" });
   } catch (error) {
