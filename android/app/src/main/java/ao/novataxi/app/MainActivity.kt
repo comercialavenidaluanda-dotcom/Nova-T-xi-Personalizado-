@@ -150,6 +150,20 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
         locationCallback = null
+        val driverId = activeDriverId
+        if (driverId != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    supabase.from("nova_taxi_driver_profiles").update({
+                        set("disponivel", false)
+                    }) {
+                        filter { eq("id", driverId) }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("NOVA_TAXI_GPS", "Não foi possível marcar o motorista offline", e)
+                }
+            }
+        }
     }
 }
 
@@ -196,8 +210,13 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         filter { eq("id", loggedUid) }
                     }.decodeList<TaxiDriverProfile>().firstOrNull()
                     if (driver?.aprovado == true) {
+                        supabase.from("nova_taxi_driver_profiles").update({
+                            set("disponivel", true)
+                        }) {
+                            filter { eq("id", loggedUid) }
+                        }
                         activity.startDriverGps(loggedUid)
-                        message = "GPS iniciado. A localização será sincronizada enquanto a aplicação estiver aberta."
+                        message = "Ficaste online. O GPS será sincronizado enquanto a aplicação estiver aberta."
                     } else {
                         message = "A conta de motorista ainda aguarda aprovação administrativa. O GPS operacional não foi iniciado."
                     }
