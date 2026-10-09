@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
   // através da função RPC pública já existente, que consulta a tabela privada em SQL.
   const caller = createClient(
     url,
-    Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? serviceKey,
+    Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp",
     {
       global: { headers: { Authorization: `Bearer ${token}` } },
       auth: { persistSession: false, autoRefreshToken: false },
