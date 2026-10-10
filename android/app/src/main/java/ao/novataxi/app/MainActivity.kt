@@ -180,6 +180,8 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var driverApproved by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
+    var demoMode by remember { mutableStateOf(false) }
+    var demoRideState by remember { mutableStateOf("Ainda não pediu uma corrida de demonstração.") }
     var originText by remember { mutableStateOf("") }
     var destinationText by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("cool") }
@@ -265,11 +267,72 @@ private fun NovaTaxiApp(activity: MainActivity) {
                             finally { busy = false }
                         }
                     }, modifier = Modifier.fillMaxWidth()) { Text(if (busy) "A processar…" else if (isLogin) "Entrar" else "Criar conta") }
+                    OutlinedButton(onClick = {
+                        demoMode = true
+                        logged = true
+                        loggedRole = "passageiro"
+                        displayName = "Visitante — DEMO"
+                        originText = "Praça da Independência, Luanda"
+                        destinationText = "Aeroporto 4 de Fevereiro"
+                        category = "cool"
+                        payment = "cash"
+                        destinationLat = null
+                        destinationLng = null
+                        demoRideState = "Ainda não pediu uma corrida de demonstração."
+                        message = "Modo DEMO: nada será enviado ao Supabase."
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Experimentar demonstração sem login") }
                     TextButton(onClick = { isLogin = !isLogin; message = "" }, modifier = Modifier.fillMaxWidth()) { Text(if (isLogin) "Ainda não tenho conta — registar" else "Já tenho conta — entrar") }
                     if (message.isNotBlank()) Text(message, color = NovaInk, style = MaterialTheme.typography.bodySmall)
                     Text("O cadastro não solicita dados nem método de pagamento.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 }
             }
+        }
+        return
+    }
+
+    if (demoMode) {
+        Column(Modifier.fillMaxSize().background(NovaCream).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("NOVA Táxi", color = NovaOrange, style = MaterialTheme.typography.headlineMedium)
+            Text("Demonstração sem login", color = NovaInk, style = MaterialTheme.typography.titleLarge)
+            Text("Este modo é apenas para experimentar a interface. Não cria contas, não envia pedidos reais e não grava dados no Supabase.", color = Color(0xFF9A3412))
+            OutlinedTextField(value = originText, onValueChange = { originText = it }, label = { Text("Partida (demonstração)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(value = destinationText, onValueChange = { destinationText = it }, label = { Text("Destino (demonstração)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Text("Toque no mapa para escolher um destino para a simulação.", style = MaterialTheme.typography.bodySmall)
+            AndroidView(factory = { ctx ->
+                MapView(ctx).apply {
+                    onCreate(null)
+                    getMapAsync { map ->
+                        map.setStyle("https://tiles.openfreemap.org/styles/liberty")
+                        map.cameraPosition = CameraPosition.Builder().target(LatLng(-8.8390, 13.2894)).zoom(11.0).build()
+                        map.addOnMapClickListener { point ->
+                            destinationLat = point.latitude
+                            destinationLng = point.longitude
+                            destinationText = "Ponto selecionado no mapa"
+                            demoRideState = "Destino marcado para simulação: %.5f, %.5f".format(point.latitude, point.longitude)
+                            true
+                        }
+                    }
+                }
+            }, modifier = Modifier.fillMaxWidth().height(250.dp))
+            Text("Escolha a categoria")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = category == "cool", onClick = { category = "cool" }, label = { Text("Cool") })
+                FilterChip(selected = category == "executivo", onClick = { category = "executivo" }, label = { Text("Executivo") })
+            }
+            Button(onClick = {
+                demoRideState = "CORRIDA SIMULADA • ${category.uppercase()} • Pedido de demonstração recebido. Nenhum motorista foi contactado e nenhum dado foi guardado."
+            }, modifier = Modifier.fillMaxWidth()) { Text("Simular pedido de corrida") }
+            Card(colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Estado da demonstração", color = NovaOrange, style = MaterialTheme.typography.titleMedium)
+                    Text(demoRideState, color = NovaInk)
+                }
+            }
+            OutlinedButton(onClick = {
+                demoMode = false
+                logged = false
+                message = ""
+            }, modifier = Modifier.fillMaxWidth()) { Text("Sair da demonstração") }
         }
         return
     }
