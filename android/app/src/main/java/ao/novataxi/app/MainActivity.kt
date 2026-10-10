@@ -122,7 +122,7 @@ class MainActivity : ComponentActivity() {
         }
         try {
             fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-                .addOnSuccessListener { location -> onResult(location, if (location == null) "Não foi possível obter GPS. Ative a localização e tente novamente." else null }
+                .addOnSuccessListener { location -> onResult(location, if (location == null) "Não foi possível obter GPS. Ative a localização e tente novamente." else null) }
                 .addOnFailureListener { onResult(null, it.message ?: "Falha ao obter localização.") }
         } catch (e: SecurityException) { onResult(null, "Permissão de localização não concedida.") }
     }
