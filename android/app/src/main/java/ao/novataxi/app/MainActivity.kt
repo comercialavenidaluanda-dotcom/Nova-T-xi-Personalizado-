@@ -91,10 +91,8 @@ class MainActivity : ComponentActivity() {
                     val payload = DriverLocationPayload(
                         driverId = uid, lat = location.latitude, lng = location.longitude,
                         accuracyM = if (location.hasAccuracy()) location.accuracy.toDouble() else null,
-                        speedMps = if (location.hasSpeed()) location.speed.toDouble() else null,
                         bearingDeg = if (location.hasBearing()) location.bearing.toDouble() else null,
-                        capturedAt = Instant.ofEpochMilli(location.time).toString(),
-                        sequenceNo = System.currentTimeMillis()
+                        capturedAt = Instant.ofEpochMilli(location.time).toString()
                     )
                     CoroutineScope(Dispatchers.IO).launch {
                         try { supabase.from("nova_taxi_driver_locations").insert(payload) }
