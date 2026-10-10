@@ -2,7 +2,7 @@ name: NOVA Táxi — APK Debug
 
 on:
   push:
-    branches: [main]
+    branches: [main, "rebuild/nova-taxi-fresh-2026-10-10"]
     paths:
       - "android/**"
       - ".github/workflows/android-debug-apk.yml"
