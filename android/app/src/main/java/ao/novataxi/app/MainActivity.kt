@@ -23,6 +23,8 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.Postgrest
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,28 +47,21 @@ private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabase
 
 @Serializable
 data class TaxiProfile(
-    @SerialName("user_id") val userId: String,
-    val role: String,
-    @SerialName("full_name") val fullName: String,
-    val email: String? = null,
-    val phone: String? = null
+    @SerialName("id") val userId: String,
+    @SerialName("tipo_utilizador") val role: String,
+    @SerialName("nome") val fullName: String,
+    @SerialName("telefone") val phone: String? = null,
+    @SerialName("ativo") val active: Boolean = true
 )
 
 @Serializable
-data class TaxiDriverProfile(@SerialName("user_id") val userId: String)
-
-@Serializable
 data class DriverLocationPayload(
-    @SerialName("driver_id") val driverId: String,
-    val lat: Double,
-    val lng: Double,
+    @SerialName("motorista_id") val driverId: String,
+    @SerialName("latitude") val lat: Double,
+    @SerialName("longitude") val lng: Double,
     @SerialName("accuracy_m") val accuracyM: Double?,
-    @SerialName("speed_mps") val speedMps: Double?,
-    @SerialName("bearing_deg") val bearingDeg: Double?,
-    @SerialName("captured_at") val capturedAt: String,
-    @SerialName("sequence_no") val sequenceNo: Long,
-    val source: String = "FUSED",
-    @SerialName("mock_location") val mockLocation: Boolean = false
+    @SerialName("heading") val bearingDeg: Double?,
+    @SerialName("captured_at") val capturedAt: String
 )
 
 class MainActivity : ComponentActivity() {
@@ -102,7 +97,7 @@ class MainActivity : ComponentActivity() {
                         sequenceNo = System.currentTimeMillis()
                     )
                     CoroutineScope(Dispatchers.IO).launch {
-                        try { supabase.from("nova_taxi_driver_live_locations").insert(payload) }
+                        try { supabase.from("nova_taxi_driver_locations").insert(payload) }
                         catch (_: Exception) { /* The server rejects GPS until the driver is approved. */ }
                     }
                 }
@@ -225,6 +220,10 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         supabase.auth.signUpWith(Email) {
                             this.email = email.trim()
                             this.password = password
+                            data = buildJsonObject {
+                                put("tipo_utilizador", if (role == "DRIVER") "motorista" else "passageiro")
+                                put("nome", name.trim())
+                            }
                         }
                     } else {
                         supabase.auth.signInWith(Email) {
@@ -242,31 +241,19 @@ private fun NovaTaxiApp(activity: MainActivity) {
                             error("A autenticação não devolveu uma sessão. Confirme o e-mail e verifique as definições de Auth no Supabase.")
                         }
                     } else {
-                        val existing = supabase.from("nova_taxi_profiles").select {
-                            filter { eq("user_id", uid) }
+                        val profile = supabase.from("nova_taxi_profiles").select {
+                            filter { eq("id", uid) }
                         }.decodeList<TaxiProfile>().firstOrNull()
-                        val effectiveRole: String
-                        if (existing == null) {
-                            val profile = TaxiProfile(userId = uid, role = role, fullName = name.trim(), email = email.trim().lowercase())
-                            supabase.from("nova_taxi_profiles").upsert(profile) { onConflict = "user_id" }
-                            if (role == "DRIVER") {
-                                supabase.from("nova_taxi_driver_profiles").upsert(TaxiDriverProfile(userId = uid)) { onConflict = "user_id" }
-                            }
-                            effectiveRole = role
-                        } else {
-                            effectiveRole = existing.role
-                            if (existing.email.isNullOrBlank()) {
-                                supabase.from("nova_taxi_profiles").update({
-                                    set("email", email.trim().lowercase())
-                                }) {
-                                    filter { eq("user_id", uid) }
-                                }
-                            }
-                        }
+                            ?: error("A autenticação foi concluída, mas o perfil não foi criado pelo trigger do Supabase. Verifique o trigger de cadastro.")
+
                         loggedUid = uid
-                        loggedRole = effectiveRole
+                        loggedRole = if (profile.role.equals("motorista", ignoreCase = true)) "DRIVER" else "PASSENGER"
                         logged = true
-                        message = if (effectiveRole == "DRIVER") "Perfil guardado. A aprovação administrativa é necessária antes do GPS operacional." else "Registo concluído e guardado no Supabase."
+                        message = if (loggedRole == "DRIVER") {
+                            "Conta ligada ao Supabase. A aprovação administrativa é necessária antes do GPS operacional."
+                        } else {
+                            "Registo concluído e perfil real confirmado no Supabase."
+                        }
                     }
                 } catch (e: Exception) {
                     message = e.message ?: "Não foi possível concluir a operação. Verifique a configuração de Auth e as políticas RLS."
