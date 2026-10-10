@@ -69,6 +69,16 @@ data class DriverProfile(
 )
 
 @Serializable
+data class DriverLocationPayload(
+    @SerialName("motorista_id") val driverId: String,
+    @SerialName("latitude") val latitude: Double,
+    @SerialName("longitude") val longitude: Double,
+    @SerialName("accuracy_m") val accuracyM: Double? = null,
+    @SerialName("heading") val heading: Double? = null,
+    @SerialName("captured_at") val capturedAt: String
+)
+
+@Serializable
 data class RidePayload(
     @SerialName("passageiro_id") val passengerId: String,
     @SerialName("categoria") val category: String,
@@ -131,10 +141,14 @@ class MainActivity : ComponentActivity() {
                     kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                         try {
                             supabase.from("nova_taxi_driver_locations").upsert(
-                                mapOf("motorista_id" to uid, "latitude" to loc.latitude, "longitude" to loc.longitude,
-                                    "accuracy_m" to if (loc.hasAccuracy()) loc.accuracy.toDouble() else null,
-                                    "heading" to if (loc.hasBearing()) loc.bearing.toDouble() else null,
-                                    "captured_at" to Instant.ofEpochMilli(loc.time).toString())
+                                DriverLocationPayload(
+                                    driverId = uid,
+                                    latitude = loc.latitude,
+                                    longitude = loc.longitude,
+                                    accuracyM = if (loc.hasAccuracy()) loc.accuracy.toDouble() else null,
+                                    heading = if (loc.hasBearing()) loc.bearing.toDouble() else null,
+                                    capturedAt = Instant.ofEpochMilli(loc.time).toString()
+                                )
                             )
                         } catch (_: Exception) { }
                     }
@@ -179,12 +193,15 @@ private fun NovaTaxiApp(activity: MainActivity) {
 
     val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true || result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (granted) activity.readCurrentLocation { loc, err ->
+        if (granted) {
+            if (loggedRole == "motorista" && driverApproved) activity.startDriverGps(loggedUid)
+            activity.readCurrentLocation { loc, err ->
             if (loc != null) {
                 originLat = loc.latitude; originLng = loc.longitude
                 if (originText.isBlank()) originText = "Localização atual"
                 message = "Origem definida com GPS real."
             } else message = err ?: "Não foi possível obter GPS."
+            }
         } else message = "Autorize a localização para definir a origem da viagem."
     }
 
