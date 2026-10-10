@@ -22,6 +22,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +38,10 @@ import java.time.Instant
 private const val SUPABASE_URL = BuildConfig.SUPABASE_URL
 private const val SUPABASE_KEY = BuildConfig.SUPABASE_PUBLISHABLE_KEY
 
-private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabaseKey = SUPABASE_KEY) { install(Auth) }
+private val supabase = createSupabaseClient(supabaseUrl = SUPABASE_URL, supabaseKey = SUPABASE_KEY) {
+    install(Auth)
+    install(Postgrest)
+}
 
 @Serializable
 data class TaxiProfile(
