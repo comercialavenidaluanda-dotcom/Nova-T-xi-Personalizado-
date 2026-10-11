@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -198,7 +199,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("NOVA Táxi", style = MaterialTheme.typography.headlineLarge)
         Text("Pedimos. Chegamos.")
-        Text(if (isLogin) "Entrar com e-mail" else "Criar conta de teste por e-mail")
+        Text(if (isLogin) "Entrar com e-mail" else "Criar conta por e-mail")
         if (!isLogin) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome completo") }, modifier = Modifier.fillMaxWidth())
             Text("Registar como")
@@ -207,8 +208,8 @@ private fun NovaTaxiApp(activity: MainActivity) {
                 FilterChip(selected = role == "DRIVER", onClick = { role = "DRIVER" }, label = { Text("Motorista") })
             }
         }
-        OutlinedTextField(value = email, onValueChange = { email = it.trim() }, label = { Text("E-mail") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Palavra-passe (mínimo 8 caracteres)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("E-mail") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Palavra-passe (mínimo 8 caracteres)") }, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), modifier = Modifier.fillMaxWidth())
         Button(enabled = !busy && email.contains("@") && password.length >= 8 && (isLogin || name.isNotBlank()), onClick = {
             busy = true
             message = if (isLogin) "A autenticar…" else "A criar a conta no Supabase…"
@@ -269,6 +270,6 @@ private fun NovaTaxiApp(activity: MainActivity) {
             Text(if (isLogin) "Ainda não tenho conta — criar conta" else "Já tenho conta — entrar")
         }
         if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall)
-        Text("Registo de teste por e-mail. Não é pedido método de pagamento no cadastro.", style = MaterialTheme.typography.bodySmall)
+        Text("Registo por e-mail. Não é pedido método de pagamento no cadastro.", style = MaterialTheme.typography.bodySmall)
     }
 }
