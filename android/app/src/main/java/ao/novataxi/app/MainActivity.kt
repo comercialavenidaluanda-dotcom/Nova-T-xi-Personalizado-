@@ -174,25 +174,23 @@ private fun NovaTaxiApp(activity: MainActivity) {
     }
 
     if (logged) {
-        Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("NOVA Táxi", style = MaterialTheme.typography.headlineMedium)
-            Text(if (loggedRole == "DRIVER") "Conta de motorista" else "Conta de passageiro")
-            Text("Conta autenticada por e-mail e perfil guardado no Supabase.")
-            if (loggedRole == "DRIVER") {
-                Button(onClick = { locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS em tempo real") }
-                Text("O GPS é enviado enquanto a aplicação está aberta. O servidor bloqueia posições operacionais até à aprovação do motorista.", style = MaterialTheme.typography.bodySmall)
-            }
-            if (message.isNotBlank()) Text(message)
-            AndroidView(factory = { ctx ->
-                MapView(ctx).apply {
-                    onCreate(null)
-                    getMapAsync { map ->
-                        map.setStyle("https://tiles.openfreemap.org/styles/liberty")
-                        map.cameraPosition = CameraPosition.Builder().target(LatLng(-8.8390, 13.2894)).zoom(11.0).build()
-                    }
+        NovaTaxiHome(
+            activity = activity,
+            userRole = loggedRole,
+            onEnableDriverGps = {
+                locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+            },
+            statusMessage = message,
+            onSignOut = {
+                scope.launch {
+                    try { supabase.auth.signOut() } catch (_: Exception) { }
+                    logged = false
+                    loggedUid = ""
+                    loggedRole = "PASSENGER"
+                    message = "Sessão terminada."
                 }
-            }, modifier = Modifier.fillMaxWidth().weight(1f))
-        }
+            }
+        )
         return
     }
 
