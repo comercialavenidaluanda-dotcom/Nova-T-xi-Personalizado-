@@ -78,6 +78,8 @@ class MainActivity : ComponentActivity() {
     }
 
     fun startDriverGps(driverId: String) {
+        // Never start GPS for an identity other than the authenticated Supabase user.
+        if (supabase.auth.currentUserOrNull()?.id != driverId) return
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) return
         activeDriverId = driverId
@@ -106,10 +108,15 @@ class MainActivity : ComponentActivity() {
         catch (_: SecurityException) { locationCallback = null }
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun stopDriverGps() {
         locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
         locationCallback = null
+        activeDriverId = null
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopDriverGps()
     }
 }
 
@@ -182,6 +189,30 @@ private fun NovaTaxiApp(activity: MainActivity) {
                 Button(onClick = { locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS em tempo real") }
                 Text("O GPS é enviado enquanto a aplicação está aberta. O servidor bloqueia posições operacionais até à aprovação do motorista.", style = MaterialTheme.typography.bodySmall)
             }
+            Button(
+                enabled = !busy,
+                onClick = {
+                    busy = true
+                    scope.launch {
+                        try {
+                            activity.stopDriverGps()
+                            supabase.auth.signOut()
+                            logged = false
+                            loggedUid = ""
+                            loggedRole = "PASSENGER"
+                            email = ""
+                            password = ""
+                            name = ""
+                            message = "Sessão terminada com segurança."
+                        } catch (_: Exception) {
+                            message = "Não foi possível terminar a sessão. Tente novamente."
+                        } finally {
+                            busy = false
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Terminar sessão") }
             if (message.isNotBlank()) Text(message)
             AndroidView(factory = { ctx ->
                 MapView(ctx).apply {
@@ -257,6 +288,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
                 } catch (e: Exception) {
                     message = e.message ?: "Não foi possível concluir a operação. Verifique a configuração de Auth e as políticas RLS."
                 } finally {
+                    password = ""
                     busy = false
                 }
             }
