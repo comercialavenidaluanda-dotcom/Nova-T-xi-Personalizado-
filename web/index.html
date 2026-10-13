@@ -56,6 +56,8 @@
     .express-admin{margin-top:14px}.express-admin summary{font-weight:850;cursor:pointer;padding:5px 0}.express-admin-form{border-top:1px solid #eee;padding-top:10px;margin-top:14px}.express-admin-form h3{font-size:15px;margin:4px 0 10px}.express-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.express-admin-grid .wide{grid-column:1/-1}.express-admin-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:750}.express-admin-field input,.express-admin-field select,.express-admin-field textarea{min-width:0;width:100%;border:1px solid #dedede;border-radius:12px;padding:11px;background:#fff;color:var(--ink);font:inherit}.express-admin-checks{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;margin:10px 0}.express-admin-checks label{display:flex;align-items:center;gap:6px}.express-admin-list{font-size:12px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}.express-admin-item{padding:10px 0;border-bottom:1px solid #eee}.express-admin-item strong{color:var(--ink)}@media(max-width:420px){.express-admin-grid{grid-template-columns:1fr}.express-admin-grid .wide{grid-column:auto}}
   
     .payment-ride-list{display:grid;gap:10px;margin-top:14px}.payment-ride-card{border:1px solid var(--line);border-radius:15px;padding:13px}.payment-ride-card strong{display:block;font-size:13px}.payment-ride-card p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}.payment-panel{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.payment-panel h3{font-size:16px;margin:0 0 12px}.payment-panel select,.payment-panel input{width:100%;border:1px solid #dedede;border-radius:13px;padding:13px;background:#fff;color:var(--ink)}.payment-methods{display:grid;gap:9px}.payment-methods .secondary{margin-top:0}.payment-panel [hidden]{display:none!important}
+
+    .driver-panel-intro{font-size:12px;color:var(--muted);line-height:1.55;margin:0 0 12px}.driver-ride-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.driver-ride-actions button{flex:1 1 130px;min-height:40px}.driver-ride-actions button:disabled{opacity:.55;cursor:not-allowed}.driver-ride-actions .danger-action{border:1px solid #fecaca;color:#b91c1c;background:#fff7f7;border-radius:12px;padding:10px 12px;font-weight:700}
 </style>
 </head>
 <body>
@@ -211,8 +213,15 @@
         <div class="driver-stats"><div class="driver-stat"><span>Corridas ativas</span><strong id="driver-active-count">—</strong><small>Associadas à tua conta</small></div><div class="driver-stat"><span>Veículos</span><strong id="driver-vehicle-count">—</strong><small>Registados no sistema</small></div></div>
         <div class="panel driver-panel"><div class="section-head"><h2>Jornada</h2><span id="driver-live-label">Dados reais</span></div><div id="driver-work-state" class="driver-work-state"><span class="driver-work-icon">⏳</span><div><strong>A carregar a jornada</strong><p>Vamos confirmar se a tua conta está aprovada e disponível.</p></div></div><div id="driver-work-note" class="notice"><span class="info">ⓘ</span><div><strong>Disponibilidade controlada</strong>A entrada online será ativada depois de validarmos as regras de segurança que protegem o estado de aprovação do motorista.</div></div></div>
         <div class="panel driver-panel"><div class="section-head"><h2>As minhas corridas</h2><span id="driver-rides-label">Últimas corridas</span></div><div id="driver-rides-list" class="driver-rides-list"><div class="empty-state"><div class="empty-icon">🚘</div>A consultar as tuas corridas…</div></div></div>
+        <div class="panel driver-panel">
+          <div class="section-head"><h2>Pedidos disponíveis</h2><span id="driver-available-count">A validar</span></div>
+          <p class="driver-panel-intro">Os pedidos são obtidos através da função segura do Supabase. Só motoristas aprovados e online podem consultar e aceitar viagens.</p>
+          <button class="secondary" id="driver-available-refresh" type="button">↻ Atualizar pedidos</button>
+          <div id="driver-available-status" class="status" role="status" aria-live="polite">A validar disponibilidade…</div>
+          <div id="driver-available-rides-list" class="driver-rides-list"><div class="empty-state">A consultar pedidos reais…</div></div>
+        </div>
         <div class="panel driver-panel"><div class="section-head"><h2>Veículos</h2><span>Perfil de motorista</span></div><div id="driver-vehicles-list" class="driver-vehicles-list"><div class="empty-state">A consultar veículos registados…</div></div><button class="secondary" id="driver-vehicle-help">Como registar ou atualizar o veículo</button><div id="driver-vehicle-status" class="status" role="status" aria-live="polite"></div></div>
-        <div class="notice"><span class="info">ⓘ</span><div><strong>Sem corridas inventadas</strong>Este painel só apresenta informações devolvidas pelo Supabase. Os pedidos disponíveis para aceitar serão mostrados quando existir uma política segura de distribuição de corridas para motoristas aprovados.</div></div>
+        <div class="notice"><span class="info">ⓘ</span><div><strong>Fluxo de viagem controlado pelo servidor</strong>A aceitação e as mudanças de estado usam RPCs existentes. A conclusão da viagem continuará bloqueada até existir e ser validada uma função segura de conclusão no backend.</div></div>
       </section>
 
       <section id="help" class="screen" aria-labelledby="help-title">
@@ -707,6 +716,44 @@
       function driverMessage(id,message){const node=document.getElementById(id);if(node)node.textContent=message;}
       function escapeDriverText(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
       function driverEmpty(title,detail){return '<div class="driver-empty"><strong>'+escapeDriverText(title)+'</strong>'+escapeDriverText(detail)+'</div>';}
+      async function performDriverRideAction(action,rideId){
+        const status=document.getElementById('driver-available-status');
+        const buttons=[...document.querySelectorAll('[data-driver-action]')];
+        buttons.forEach(b=>b.disabled=true);
+        if(status)status.textContent='A validar a ação com o Supabase…';
+        try{
+          if(!supabaseClient)throw new Error('A ligação ao Supabase não está disponível.');
+          const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+          if(sessionError)throw sessionError;
+          if(!sessionData?.session?.user)throw new Error('A sessão expirou. Entra novamente.');
+          let result;
+          if(action==='accept'){
+            result=await supabaseClient.rpc('nova_taxi_accept_ride',{p_ride_id:rideId});
+          }else{
+            const stateMap={arrive:'motorista_chegando',start:'em_curso',cancel:'cancelada'};
+            const nextState=stateMap[action];
+            if(!nextState)throw new Error('Ação não reconhecida.');
+            result=await supabaseClient.rpc('nova_taxi_advance_ride',{p_ride_id:rideId,p_new_state:nextState});
+          }
+          if(result.error)throw result.error;
+          const labels={accept:'Corrida aceite',arrive:'Estado atualizado: motorista a caminho',start:'Viagem iniciada',cancel:'Corrida cancelada'};
+          if(status)status.textContent=(labels[action]||'Ação concluída')+'. O estado devolvido pelo servidor será confirmado ao atualizar o painel.';
+          await loadDriverDashboard();
+        }catch(error){
+          if(status)status.textContent='Não foi possível executar a ação: '+(error?.message||'erro desconhecido')+'. O estado não será presumido; atualiza o painel antes de tentar novamente.';
+        }finally{
+          buttons.forEach(b=>b.disabled=false);
+        }
+      }
+      document.getElementById('driver-available-rides-list').addEventListener('click',event=>{
+        const button=event.target.closest('[data-driver-action]');
+        if(button)performDriverRideAction(button.dataset.driverAction,button.dataset.rideId);
+      });
+      document.getElementById('driver-rides-list').addEventListener('click',event=>{
+        const button=event.target.closest('[data-driver-action]');
+        if(button)performDriverRideAction(button.dataset.driverAction,button.dataset.rideId);
+      });
+      document.getElementById('driver-available-refresh').addEventListener('click',loadDriverDashboard);
       async function loadDriverDashboard(){
         if(driverLoadInProgress)return;
         driverLoadInProgress=true;
@@ -723,7 +770,7 @@
             driverMessage('driver-status-message','Entra com a tua conta de motorista para consultar aprovação, veículo e corridas.');
             document.getElementById('driver-work-state').innerHTML='<span class="driver-work-icon">🔐</span><div><strong>Inicia sessão</strong><p>Usa o teu e-mail e palavra-passe e seleciona o perfil Motorista.</p><button class="secondary" data-go="account">Entrar na NOVA</button></div>';
             document.getElementById('driver-active-count').textContent='—';document.getElementById('driver-vehicle-count').textContent='—';
-            document.getElementById('driver-rides-list').innerHTML=driverEmpty('Sessão não iniciada','Entra para ver as corridas associadas à tua conta.');
+            document.getElementById('driver-rides-list').innerHTML=driverEmpty('Sessão não iniciada','Entra para ver as corridas associadas à tua conta.');document.getElementById('driver-available-rides-list').innerHTML=driverEmpty('Sessão necessária','Entra com a conta de motorista.');document.getElementById('driver-available-status').textContent='Inicia sessão para consultar pedidos.';
             document.getElementById('driver-vehicles-list').innerHTML=driverEmpty('Veículos não carregados','A lista será apresentada depois de validares a sessão.');
             return;
           }
@@ -734,7 +781,7 @@
             document.getElementById('driver-state-pill').className='driver-pill inactive';
             driverMessage('driver-status-message','Esta sessão não está associada a um perfil de motorista NOVA. Sai e entra com a conta correta ou cria um perfil Motorista.');
             document.getElementById('driver-work-state').innerHTML='<span class="driver-work-icon">👤</span><div><strong>Conta não reconhecida como motorista</strong><p>Por segurança, o painel não carrega corridas de outro tipo de perfil.</p><button class="secondary" data-go="account">Ver conta</button></div>';
-            document.getElementById('driver-rides-list').innerHTML=driverEmpty('Sem corridas','É necessário um perfil de motorista válido.');document.getElementById('driver-vehicles-list').innerHTML=driverEmpty('Sem veículos','É necessário um perfil de motorista válido.');
+            document.getElementById('driver-rides-list').innerHTML=driverEmpty('Sem corridas','É necessário um perfil de motorista válido.');document.getElementById('driver-available-rides-list').innerHTML=driverEmpty('Perfil inválido','Usa uma conta de motorista.');document.getElementById('driver-available-status').textContent='Perfil de motorista necessário.';document.getElementById('driver-vehicles-list').innerHTML=driverEmpty('Sem veículos','É necessário um perfil de motorista válido.');
             return;
           }
           driverMessage('driver-greeting',profile.nome?'Olá, '+profile.nome+'. Vamos acompanhar a tua jornada.':'Bem-vindo à tua jornada NOVA.');
@@ -758,8 +805,31 @@
               const fare=r.valor_final??r.valor_estimado;
               const fareText=fare==null?'Valor por confirmar':Number(fare).toLocaleString('pt-AO')+' Kz';
               const date=r.criado_em?new Date(r.criado_em).toLocaleString('pt-AO',{dateStyle:'short',timeStyle:'short'}):'Data não disponível';
-              return '<article class="driver-ride-card"><div class="driver-ride-top"><strong>'+escapeDriverText(String(r.categoria||'Corrida').toUpperCase())+'</strong><span class="driver-ride-state">'+escapeDriverText(state)+'</span></div><div class="driver-ride-route">🟠 '+escapeDriverText(r.origem_texto||'Origem não indicada')+'<br>⚫ '+escapeDriverText(r.destino_texto||'Destino não indicado')+'</div><div class="driver-ride-meta"><span>'+escapeDriverText(date)+'</span><strong>'+escapeDriverText(fareText)+'</strong></div></article>';
+              const actions=r.estado==='aceita'?'<button class="primary" type="button" data-driver-action="arrive" data-ride-id="'+escapeDriverText(r.id)+'">A caminho</button><button class="danger-action" type="button" data-driver-action="cancel" data-ride-id="'+escapeDriverText(r.id)+'">Cancelar</button>':r.estado==='motorista_chegando'?'<button class="primary" type="button" data-driver-action="start" data-ride-id="'+escapeDriverText(r.id)+'">Iniciar viagem</button><button class="danger-action" type="button" data-driver-action="cancel" data-ride-id="'+escapeDriverText(r.id)+'">Cancelar</button>':r.estado==='em_curso'?'<p class="driver-panel-intro">A conclusão da viagem será ativada após validação de um endpoint seguro no backend.</p>':'';return '<article class="driver-ride-card"><div class="driver-ride-top"><strong>'+escapeDriverText(String(r.categoria||'Corrida').toUpperCase())+'</strong><span class="driver-ride-state">'+escapeDriverText(state)+'</span></div><div class="driver-ride-route">🟠 '+escapeDriverText(r.origem_texto||'Origem não indicada')+'<br>⚫ '+escapeDriverText(r.destino_texto||'Destino não indicado')+'</div><div class="driver-ride-meta"><span>'+escapeDriverText(date)+'</span><strong>'+escapeDriverText(fareText)+'</strong></div>'+(actions?'<div class="driver-ride-actions">'+actions+'</div>':'')+'</article>';
             }).join(''):driverEmpty('Ainda sem corridas atribuídas','Quando uma corrida estiver associada a esta conta, aparecerá aqui.');
+          }
+          const availableList=document.getElementById('driver-available-rides-list');
+          const availableCount=document.getElementById('driver-available-count');
+          const availableStatus=document.getElementById('driver-available-status');
+          availableList.innerHTML=driverEmpty('A validar disponibilidade','Os pedidos só serão consultados se a conta estiver ativa, aprovada e online.');
+          availableCount.textContent='—';
+          if(profile.ativo===true && driver?.aprovado===true && driver?.disponivel===true){
+            availableStatus.textContent='A consultar pedidos disponíveis através de nova_taxi_list_available_rides…';
+            const {data:availableRides,error:availableError}=await supabaseClient.rpc('nova_taxi_list_available_rides');
+            if(availableError){
+              availableStatus.textContent='Não foi possível consultar pedidos: '+availableError.message;
+              availableCount.textContent='Erro';
+            }else{
+              const rows=Array.isArray(availableRides)?availableRides:[];
+              availableCount.textContent=rows.length+' pedido(s)';
+              availableStatus.textContent=rows.length?'Pedidos reais disponíveis. A aceitação será confirmada pelo servidor.':'Não existem pedidos disponíveis neste momento.';
+              availableList.innerHTML=rows.length?rows.map(r=>{
+                const date=r.criado_em?new Date(r.criado_em).toLocaleString('pt-AO',{dateStyle:'short',timeStyle:'short'}):'Data não disponível';
+                return '<article class="driver-ride-card"><div class="driver-ride-top"><strong>'+escapeDriverText(String(r.categoria||'Corrida').toUpperCase())+'</strong><span class="driver-ride-state">Disponível</span></div><div class="driver-ride-route">🟠 '+escapeDriverText(r.origem_texto||'Origem não indicada')+'<br>⚫ '+escapeDriverText(r.destino_texto||'Destino não indicado')+'</div><div class="driver-ride-meta"><span>'+escapeDriverText(date)+'</span><strong>Valor por confirmar</strong></div><div class="driver-ride-actions"><button class="primary" type="button" data-driver-action="accept" data-ride-id="'+escapeDriverText(r.id)+'">Aceitar corrida</button></div></article>';
+              }).join(''):driverEmpty('Sem pedidos disponíveis','Os pedidos novos aparecerão aqui quando existirem no servidor.');
+            }
+          }else{
+            availableStatus.textContent='Pedidos indisponíveis: o motorista precisa de conta ativa, aprovação e estado online confirmados pelo Supabase.';
           }
           const {data:vehicles,error:vehiclesError}=await supabaseClient.from('nova_taxi_vehicles').select('marca,modelo,matricula,cor,categoria,ativo').eq('motorista_id',user.id).order('criado_em',{ascending:false}).limit(5);
           if(vehiclesError){driverMessage('driver-vehicle-count','—');document.getElementById('driver-vehicles-list').innerHTML=driverEmpty('Veículos indisponíveis',vehiclesError.message);}
