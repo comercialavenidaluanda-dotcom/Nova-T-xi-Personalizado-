@@ -30,6 +30,10 @@ import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.maplibre.android.MapLibre
@@ -53,6 +57,13 @@ data class TaxiProfile(
     @SerialName("nome") val fullName: String,
     @SerialName("telefone") val phone: String? = null,
     @SerialName("ativo") val active: Boolean = true
+)
+
+@Serializable
+data class CompletedRide(
+    @SerialName("id") val id: String,
+    @SerialName("valor_final") val finalAmount: Long? = null,
+    @SerialName("estado") val state: String
 )
 
 @Serializable
@@ -127,6 +138,86 @@ private fun NovaTaxiApp(activity: MainActivity) {
     var busy by remember { mutableStateOf(false) }
     var showPromo by remember { mutableStateOf(!activity.getSharedPreferences("nova_taxi_prefs", android.content.Context.MODE_PRIVATE).getBoolean("promo_seen_v1", false)) }
     val scope = rememberCoroutineScope()
+    val completedRides = remember { mutableStateListOf<CompletedRide>() }
+    var selectedRideId by remember { mutableStateOf("") }
+    var expressMobile by remember { mutableStateOf("") }
+    var paymentBusy by remember { mutableStateOf(false) }
+    var paymentMessage by remember { mutableStateOf("") }
+
+    fun loadCompletedRides() {
+        scope.launch {
+            try {
+                val rides = withContext(Dispatchers.IO) {
+                    supabase.from("nova_taxi_rides").select {
+                        filter {
+                            eq("passageiro_id", loggedUid)
+                            eq("estado", "concluida")
+                        }
+                    }.decodeList<CompletedRide>()
+                }
+                completedRides.clear()
+                completedRides.addAll(rides.filter { (it.finalAmount ?: 0L) > 0L })
+                if (completedRides.none { it.id == selectedRideId }) selectedRideId = completedRides.firstOrNull()?.id.orEmpty()
+                paymentMessage = if (completedRides.isEmpty()) "Não há corridas concluídas e por pagar disponíveis nesta conta." else "Corridas concluídas carregadas do Supabase."
+            } catch (e: Exception) {
+                paymentMessage = "Não foi possível carregar as corridas: " + (e.message ?: "erro de ligação")
+            }
+        }
+    }
+
+    fun startPayment(method: String) {
+        if (selectedRideId.isBlank()) {
+            paymentMessage = "Selecione uma corrida concluída."
+            return
+        }
+        if (method == "multicaixa_express" && !Regex("^9\\d{8}$").matches(expressMobile.filter { it.isDigit() })) {
+            paymentMessage = "Introduza um número móvel angolano válido com 9 dígitos, começado por 9."
+            return
+        }
+        paymentBusy = true
+        paymentMessage = "A solicitar instruções de pagamento no BitPay sandbox…"
+        scope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val token = supabase.auth.currentAccessTokenOrNull() ?: error("Sessão expirada. Entre novamente.")
+                    val conn = (URL("$SUPABASE_URL/functions/v1/nova-taxi-create-payment-intent").openConnection() as HttpURLConnection)
+                    try {
+                        conn.requestMethod = "POST"
+                        conn.connectTimeout = 15000
+                        conn.readTimeout = 20000
+                        conn.doOutput = true
+                        conn.setRequestProperty("Content-Type", "application/json")
+                        conn.setRequestProperty("Authorization", "Bearer $token")
+                        conn.setRequestProperty("apikey", SUPABASE_KEY)
+                        val body = JSONObject().put("ride_id", selectedRideId).put("payment_method", method)
+                        if (method == "multicaixa_express") body.put("mobile", expressMobile.filter { it.isDigit() })
+                        conn.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+                        val status = conn.responseCode
+                        val stream = if (status in 200..299) conn.inputStream else conn.errorStream
+                        val raw = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                        Pair(status, JSONObject(raw.ifBlank { "{}" }))
+                    } finally { conn.disconnect() }
+                }
+                val status = result.first
+                val json = result.second
+                val payment = json.optJSONObject("payment")
+                val refEntity = payment?.optString("entidade_referencia", "").orEmpty()
+                val refNumber = payment?.optString("numero_referencia", "").orEmpty()
+                val state = payment?.optString("estado", "").orEmpty()
+                paymentMessage = when {
+                    status in 200..299 && (refNumber.isNotBlank() || refEntity.isNotBlank()) ->
+                        "Pedido criado no sandbox. Estado: $state. Entidade: $refEntity. Referência: $refNumber. O pagamento só fica confirmado após validação do webhook."
+                    status in 200..299 -> "Pedido de pagamento recebido no sandbox. Estado ainda não confirmado. " + json.optString("error", "")
+                    status == 202 -> "Estado do pagamento desconhecido. Não crie outro pagamento; atualize/verifique a mesma tentativa. " + json.optString("error", "")
+                    else -> "BitPay não aceitou o pedido (HTTP $status): " + json.optString("error", json.optString("message", "erro não especificado"))
+                }
+            } catch (e: Exception) {
+                paymentMessage = "Não foi possível iniciar o pagamento: " + (e.message ?: "erro de ligação") + ". Confirme o estado antes de tentar novamente."
+            } finally {
+                paymentBusy = false
+            }
+        }
+    }
     val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true || result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted && loggedRole == "DRIVER") {
@@ -178,6 +269,40 @@ private fun NovaTaxiApp(activity: MainActivity) {
             Text("NOVA Táxi", style = MaterialTheme.typography.headlineMedium)
             Text(if (loggedRole == "DRIVER") "Conta de motorista" else "Conta de passageiro")
             Text("Conta autenticada por e-mail e perfil guardado no Supabase.")
+            if (loggedRole == "PASSENGER") {
+                Text("Pagamentos de corridas", style = MaterialTheme.typography.titleLarge)
+                Text("Os pagamentos estão em modo de teste (sandbox). Não são cobranças reais.", style = MaterialTheme.typography.bodySmall)
+                OutlinedButton(onClick = { loadCompletedRides() }, enabled = !paymentBusy, modifier = Modifier.fillMaxWidth()) {
+                    Text("Atualizar corridas concluídas")
+                }
+                if (completedRides.isEmpty()) {
+                    Text("Nenhuma corrida concluída carregada. Atualize depois de uma corrida válida.", style = MaterialTheme.typography.bodySmall)
+                } else {
+                    completedRides.forEach { ride ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            RadioButton(selected = selectedRideId == ride.id, onClick = { selectedRideId = ride.id })
+                            Column(Modifier.weight(1f)) {
+                                Text("Corrida " + ride.id.take(8).uppercase())
+                                Text("Valor final: " + (ride.finalAmount ?: 0L) + " AOA", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                    OutlinedTextField(
+                        value = expressMobile,
+                        onValueChange = { expressMobile = it.filter(Char::isDigit).take(9) },
+                        label = { Text("Número Multicaixa Express (9 dígitos)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Button(onClick = { startPayment("multicaixa_express") }, enabled = !paymentBusy, modifier = Modifier.fillMaxWidth()) {
+                        Text(if (paymentBusy) "A processar…" else "Pagar com Multicaixa Express")
+                    }
+                    OutlinedButton(onClick = { startPayment("multicaixa_reference") }, enabled = !paymentBusy, modifier = Modifier.fillMaxWidth()) {
+                        Text("Gerar pagamento por referência")
+                    }
+                }
+                if (paymentMessage.isNotBlank()) Text(paymentMessage, style = MaterialTheme.typography.bodySmall)
+            }
             if (loggedRole == "DRIVER") {
                 Button(onClick = { locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }, modifier = Modifier.fillMaxWidth()) { Text("Ativar GPS em tempo real") }
                 Text("O GPS é enviado enquanto a aplicação está aberta. O servidor bloqueia posições operacionais até à aprovação do motorista.", style = MaterialTheme.typography.bodySmall)
@@ -248,6 +373,7 @@ private fun NovaTaxiApp(activity: MainActivity) {
                         loggedUid = uid
                         loggedRole = if (profile.role.equals("motorista", ignoreCase = true)) "DRIVER" else "PASSENGER"
                         logged = true
+                        if (loggedRole == "PASSENGER") loadCompletedRides()
                         message = if (loggedRole == "DRIVER") {
                             "Conta ligada ao Supabase. A aprovação administrativa é necessária antes do GPS operacional."
                         } else {
