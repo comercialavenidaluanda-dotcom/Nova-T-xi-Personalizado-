@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f97316">
-  <meta name="description" content="NOVA Táxi Personalizado — interface inicial de mobilidade.">
-  <title>NOVA Táxi Personalizado</title>
+  <meta name="description" content="NOVA Táxi Personalizado — mapa, serviços, pedido de viagem e conta do passageiro.">
+  <title>NOVA Táxi Personalizado | Mobilidade</title>
   <style>
     :root{--orange:#f97316;--orange-dark:#ea580c;--ink:#202124;--muted:#70757d;--line:#ececec;--surface:#fff7f1;--bg:#f7f7f8;--radius:22px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #fdba74;outline-offset:2px}.app{min-height:100dvh;max-width:760px;margin:0 auto;background:#fff;position:relative;box-shadow:0 0 40px #00000008;padding-bottom:94px}.topbar{height:76px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:#ffffffed;backdrop-filter:blur(12px);z-index:5}.brand{display:flex;align-items:center;gap:11px}.logo{width:45px;height:45px;border-radius:15px;background:var(--orange);display:grid;place-items:center;color:white;font-weight:900;font-size:21px;box-shadow:0 6px 15px #f9731630}.brand-name{font-size:17px;font-weight:850;letter-spacing:-.5px}.brand-sub{font-size:11px;color:var(--muted);margin-top:2px}.avatar{border:1px solid var(--line);background:white;border-radius:50%;width:43px;height:43px;display:grid;place-items:center;color:var(--orange-dark);font-size:20px}.content{padding:22px 18px 28px}.eyebrow{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.3px;color:var(--orange-dark)}h1{font-size:clamp(28px,6vw,39px);letter-spacing:-1.5px;line-height:1.1;margin:9px 0 10px}.intro{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 22px}.hero{background:linear-gradient(135deg,#fff5ec,#fff 75%);border:1px solid #ffead9;border-radius:26px;padding:23px 21px;overflow:hidden;position:relative}.hero:after{content:"";position:absolute;width:150px;height:150px;border:25px solid #fb923c18;border-radius:50%;right:-45px;top:-42px}.hero h2{font-size:23px;letter-spacing:-.7px;margin:0 0 8px;max-width:280px;position:relative;z-index:1}.hero p{font-size:13px;color:#6b625c;line-height:1.55;margin:0;max-width:280px;position:relative;z-index:1}.hero-mark{position:absolute;right:18px;bottom:14px;font-size:54px;transform:rotate(-8deg);filter:drop-shadow(0 8px 8px #f9731620)}.hero-cta{position:relative;z-index:1;margin-top:18px;width:auto;min-width:190px;padding:13px 17px;border:0;border-radius:13px;background:var(--orange);color:#fff;font-weight:800;box-shadow:0 7px 16px #f973162b}.service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.service-card{border:1px solid var(--line);border-radius:18px;padding:15px 13px;background:#fff;text-align:left;min-height:132px;transition:transform .15s,border-color .15s}.service-card:active{transform:scale(.985)}.service-card:hover,.service-card:focus-visible{border-color:#fdba74}.service-card .service-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:var(--surface);font-size:22px;margin-bottom:11px}.service-card strong{display:block;font-size:14px;margin-bottom:5px}.service-card small{display:block;color:var(--muted);font-size:11px;line-height:1.4}.service-card.selected{border:2px solid var(--orange);padding:14px 12px;background:#fff8f2}.home-status{display:flex;align-items:center;gap:9px;margin-top:17px;padding:12px 14px;border-radius:14px;background:#f8f8f8;color:#626262;font-size:12px}.home-status .status-dot{width:8px;height:8px;border-radius:50%;background:#b8b8b8;flex-shrink:0}.home-section{margin-top:26px}.section-head{display:flex;justify-content:space-between;align-items:center;margin:27px 0 13px}.section-head h2{font-size:17px;letter-spacing:-.3px;margin:0}.section-head span{font-size:12px;color:var(--muted)}.quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.quick-card{border:1px solid var(--line);border-radius:20px;padding:17px 15px;background:white;text-align:left;min-height:130px;transition:transform .15s,border-color .15s}.quick-card:active{transform:scale(.985)}.quick-card:hover{border-color:#fdba74}.quick-icon{width:43px;height:43px;border-radius:14px;background:var(--surface);display:grid;place-items:center;font-size:22px;margin-bottom:13px}.quick-card strong{display:block;font-size:14px;margin-bottom:5px}.quick-card small{display:block;color:var(--muted);font-size:12px;line-height:1.4}.notice{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:17px;padding:14px;margin-top:22px;color:var(--muted);font-size:12px;line-height:1.55}.notice .info{color:var(--orange-dark);font-size:18px}.notice strong{color:var(--ink);display:block;font-size:13px;margin-bottom:3px}.screen{display:none}.screen.active{display:block}.back{border:0;background:transparent;color:var(--orange-dark);font-weight:750;padding:7px 0 15px}.panel{border:1px solid var(--line);border-radius:22px;padding:19px;background:white}.panel h2{margin:0 0 7px;font-size:22px;letter-spacing:-.6px}.panel p{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.55}.field{display:block;margin:14px 0}.field span{display:block;font-size:12px;font-weight:750;margin-bottom:7px}.field input{width:100%;border:1px solid #dedede;border-radius:13px;padding:14px 13px;background:#fff;color:var(--ink)}.primary,.secondary{width:100%;border-radius:14px;padding:14px 16px;font-weight:800;border:0}.primary{background:var(--orange);color:white;box-shadow:0 7px 16px #f973162b}.primary:hover{background:var(--orange-dark)}.secondary{background:#fff4eb;color:var(--orange-dark);margin-top:10px}.role-grid,.ride-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:18px 0}.choice{border:1px solid var(--line);border-radius:17px;padding:16px 12px;text-align:left;background:#fff}.choice.selected{border:2px solid var(--orange);background:#fff8f2;padding:15px 11px}.choice .emoji{font-size:25px;display:block;margin-bottom:9px}.choice strong{font-size:14px;display:block}.choice small{color:var(--muted);font-size:11px;display:block;margin-top:5px;line-height:1.4}.status{font-size:12px;color:var(--muted);margin-top:12px;min-height:18px}.ride-route{border:1px solid var(--line);border-radius:16px;padding:13px 14px;margin:12px 0}.route-line{display:flex;align-items:center;gap:10px}.dot{width:10px;height:10px;border-radius:50%;background:var(--orange);flex-shrink:0}.dot.end{background:#333}.route-line input{border:0;border-bottom:1px solid #eee;border-radius:0;padding:11px 0;width:100%;outline:none}.route-line+.route-line{margin-top:8px}.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);padding:10px 8px calc(10px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr);background:#ffffffed;backdrop-filter:blur(12px);border-top:1px solid var(--line);z-index:10}.nav-btn{border:0;background:transparent;color:#858585;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;font-size:10px;font-weight:700}.nav-btn .nav-icon{font-size:20px;line-height:1.1}.nav-btn.active{color:var(--orange-dark)}.nav-btn.active .nav-icon{transform:translateY(-1px)}.empty-state{text-align:center;padding:30px 15px;color:var(--muted);font-size:13px;line-height:1.6}.empty-state .empty-icon{font-size:36px;margin-bottom:10px}.footer-note{text-align:center;color:#999;font-size:10px;padding:15px 10px 0}
@@ -58,7 +58,50 @@
     .payment-ride-list{display:grid;gap:10px;margin-top:14px}.payment-ride-card{border:1px solid var(--line);border-radius:15px;padding:13px}.payment-ride-card strong{display:block;font-size:13px}.payment-ride-card p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}.payment-panel{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.payment-panel h3{font-size:16px;margin:0 0 12px}.payment-panel select,.payment-panel input{width:100%;border:1px solid #dedede;border-radius:13px;padding:13px;background:#fff;color:var(--ink)}.payment-methods{display:grid;gap:9px}.payment-methods .secondary{margin-top:0}.payment-panel [hidden]{display:none!important}
 
     .driver-panel-intro{font-size:12px;color:var(--muted);line-height:1.55;margin:0 0 12px}.driver-ride-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.driver-ride-actions button{flex:1 1 130px;min-height:40px}.driver-ride-actions button:disabled{opacity:.55;cursor:not-allowed}.driver-ride-actions .danger-action{border:1px solid #fecaca;color:#b91c1c;background:#fff7f7;border-radius:12px;padding:10px 12px;font-weight:700}
-</style>
+
+    /* NOVA UX audit redesign — map-first booking home, mobile-first */
+    .app{max-width:820px;background:#fff}.content{padding:0 0 24px}
+    .home-welcome{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px 18px 14px;background:#fff}
+    .home-welcome-copy{min-width:0}.home-welcome h1{font-size:clamp(29px,7vw,38px);letter-spacing:-1.4px;margin:8px 0 7px}
+    .home-welcome .intro{font-size:13px;line-height:1.5;margin:0;max-width:330px}
+    .home-account-shortcut{flex:0 0 44px;width:44px;height:44px;border-radius:50%;border:1px solid #eee;background:#fff;color:var(--orange-dark);font-size:22px}
+    .home-map-stage{height:clamp(220px,32vh,310px);position:relative;overflow:hidden;background:#edf1eb}
+    #home-mini-map{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+    .home-map-stage .leaflet-control-attribution,.home-map-stage .leaflet-control-zoom{display:none}
+    .home-map-pill{position:absolute;z-index:2;top:13px;left:14px;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#fff;border:1px solid #eee;box-shadow:0 4px 14px #00000010;font-size:11px;font-weight:800}
+    .home-map-locate{position:absolute;z-index:2;right:14px;top:13px;width:44px;height:44px;border-radius:50%;border:1px solid #eee;background:#fff;color:var(--orange-dark);font-size:24px;box-shadow:0 4px 14px #00000010}
+    .home-map-caption{position:absolute;z-index:2;left:14px;right:14px;bottom:12px;padding:9px 11px;border-radius:11px;background:#ffffffdf;color:#333;font-size:11px;font-weight:700;pointer-events:none}
+    .home-booking-area{position:relative;margin-top:-2px;padding:0 16px 20px;background:#fff;border-radius:23px 23px 0 0;box-shadow:0 -7px 22px #00000008}
+    .home-trip-card{border:1px solid #efefef;border-radius:20px;background:#fff;overflow:hidden;box-shadow:0 7px 24px #00000007}
+    .home-trip-fields{padding:13px}.home-trip-point,.home-destination{display:flex;align-items:center;gap:11px;min-height:50px}
+    .home-origin-button{width:100%;border:0;padding:5px 0;background:#fff;text-align:left;color:inherit}
+    .home-origin-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+    .home-origin-copy small,.home-destination small{font-size:9px;letter-spacing:.8px;color:#888;font-weight:800}
+    .home-origin-copy strong,.home-destination strong{font-size:13px;color:#242424}
+    .home-point-arrow{font-size:23px;color:var(--orange);padding:0 5px}.home-trip-divider{height:1px;background:#f0efed;margin:5px 0 8px 24px}
+    .home-destination{width:100%;border:0;border-radius:13px;padding:10px 12px;background:#f7f7f7;text-align:left}
+    .home-destination-icon{width:24px;text-align:center;font-size:24px;color:var(--orange)}
+    .home-destination>span:nth-child(2){display:flex;flex:1;flex-direction:column;gap:4px}
+    .home-destination-arrow{font-size:20px;font-weight:800;color:var(--orange)}
+    .home-main-cta{display:flex;align-items:center;justify-content:center;gap:12px;width:calc(100% - 26px);min-height:49px;margin:0 auto 13px;border-radius:13px}
+    .home-section{margin:24px 0 12px}.home-section h2{font-size:17px;letter-spacing:-.3px}.home-section span{font-size:10px}
+    .home-service-rail{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding:2px 1px 12px;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:#e7e7e7 transparent}
+    .home-service-rail .service-card{position:relative;flex:0 0 142px;min-width:142px;min-height:148px;display:flex;flex-direction:column;align-items:flex-start;scroll-snap-align:start;padding:12px;border:1px solid #eee;border-radius:16px;background:#fff;text-align:left;box-shadow:0 3px 12px #00000005}
+    .home-service-rail .service-icon{width:39px;height:39px;display:grid;place-items:center;margin:0 0 9px;border-radius:12px;background:#fff1e6;font-size:21px}
+    .home-service-rail .service-card strong{font-size:11px;letter-spacing:.1px;margin-bottom:4px}
+    .home-service-rail .service-card small{font-size:10px;line-height:1.35;color:#777;min-height:26px}
+    .service-state{display:block;margin-top:auto;padding-top:8px;font-size:9px;font-weight:750;color:#8a8a8a;line-height:1.3}.service-state.active-service{color:#b45309}
+    .home-service-rail .service-card:has(.active-service){border-color:#f3e3d7}.home-service-rail .service-card:active{transform:scale(.985)}
+    .home-status{margin-top:8px;border:1px solid #eee;background:#fafafa;border-radius:13px;padding:12px;font-size:11px;line-height:1.45}
+    .home-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .home-shortcut{min-width:0;display:grid;grid-template-columns:24px minmax(0,1fr) 12px;align-items:center;gap:7px;padding:13px 10px;border:1px solid #eee;border-radius:14px;background:#fff;text-align:left;color:#333}
+    .home-shortcut>span:first-child{font-size:17px;color:var(--orange-dark)}.home-shortcut strong{font-size:11px;line-height:1.35}.home-shortcut>span:last-child{font-size:14px;color:#999}
+    .home-booking-area>.notice{margin-top:16px;background:#fafafa}.home-booking-area .notice strong{font-size:12px}.home-booking-area .notice div{font-size:11px}
+    .bottom-nav{background:#fffffffa}
+    @media(max-width:390px){.home-welcome{padding:17px 14px 12px}.home-welcome h1{font-size:28px}.home-booking-area{padding-inline:12px}.home-map-stage{height:225px}.home-service-rail .service-card{flex-basis:132px;min-width:132px}.home-shortcut{grid-template-columns:20px minmax(0,1fr) 10px;padding:11px 8px}.home-shortcut strong{font-size:10px}}
+    @media(min-width:600px){.home-welcome{padding-inline:28px}.home-booking-area{padding-inline:28px}.home-map-stage{height:300px}.home-service-rail .service-card{flex-basis:150px;min-width:150px}}
+
+  </style>
 </head>
 <body>
   <div class="app">
@@ -68,44 +111,50 @@
     </header>
     <main class="content">
       <section id="home" class="screen active" aria-labelledby="welcome-title">
-        <div class="eyebrow">NOVA • MOBILIDADE</div>
-        <h1 id="welcome-title">Para onde vamos?</h1>
-        <p class="intro">Escolhe o destino, compara os serviços e prepara a tua viagem com controlo em cada etapa.</p>
-        <div class="home-trip-card">
-          <div class="home-trip-fields">
-            <div class="home-trip-point"><span class="home-point-dot"></span><div><small>LOCAL DE PARTIDA</small><strong>Usar a minha localização</strong></div><span class="home-point-arrow">⌖</span></div>
-            <div class="home-trip-divider"></div>
-            <button class="home-destination" data-go="ride"><span class="home-destination-icon">⌕</span><span><small>DESTINO</small><strong>Para onde queres ir?</strong></span><span class="home-destination-arrow">→</span></button>
+        <div class="home-welcome">
+          <div class="home-welcome-copy"><span class="eyebrow">NOVA • MOBILIDADE</span><h1 id="welcome-title">Para onde vamos?</h1><p class="intro">A tua cidade, os teus caminhos. Começa a viagem em poucos passos.</p></div>
+          <button class="home-account-shortcut" type="button" data-go="account" aria-label="Abrir conta">♙</button>
+        </div>
+        <div class="home-map-stage" aria-label="Mapa real de Luanda">
+          <div id="home-mini-map" aria-label="Mapa OpenStreetMap; a localização pessoal só aparece depois de autorização"></div>
+          <div class="home-map-pill"><span class="map-preview-dot"></span> Mapa da zona</div>
+          <button class="home-map-locate" id="home-use-location" type="button" aria-label="Usar a minha localização" title="Usar a minha localização">⌖</button>
+          <div class="home-map-caption">Explora a zona e define o teu destino</div>
+        </div>
+        <div class="home-booking-area">
+          <div class="home-trip-card">
+            <div class="home-trip-fields">
+              <button class="home-trip-point home-origin-button" id="home-origin-shortcut" type="button"><span class="home-point-dot" aria-hidden="true"></span><span class="home-origin-copy"><small>LOCAL DE PARTIDA</small><strong>Usar a minha localização</strong></span><span class="home-point-arrow" aria-hidden="true">⌖</span></button>
+              <div class="home-trip-divider"></div>
+              <button class="home-destination" type="button" data-go="ride"><span class="home-destination-icon" aria-hidden="true">⌕</span><span><small>PARA ONDE?</small><strong>Introduzir destino</strong></span><span class="home-destination-arrow" aria-hidden="true">→</span></button>
+            </div>
+            <button class="hero-cta home-main-cta" type="button" data-go="ride">Pedir uma viagem <span aria-hidden="true">→</span></button>
           </div>
-          <div class="home-map-preview" aria-label="Mapa real OpenStreetMap centrado inicialmente em Luanda; não representa a tua posição até autorizares a localização">
-            <div id="home-mini-map" aria-label="Pré-visualização do mapa real"></div>
-            <div class="map-preview-label"><span class="map-preview-dot"></span> Mapa real · Luanda <span>↗</span></div>
+          <div class="section-head home-section"><h2>Escolhe o teu serviço</h2><span>Desliza para explorar</span></div>
+          <div class="service-grid home-service-rail" aria-label="Serviços NOVA">
+            <button class="service-card" type="button" data-service="Cool"><span class="service-icon" aria-hidden="true">🚗</span><strong>COOL</strong><small>Para todos os dias</small><span class="service-state active-service">Disponível para pedido</span></button>
+            <button class="service-card" type="button" data-service="Executivo"><span class="service-icon" aria-hidden="true">🚘</span><strong>EXECUTIVE</strong><small>Mais conforto</small><span class="service-state active-service">Disponível para pedido</span></button>
+            <button class="service-card" type="button" data-service="Bike"><span class="service-icon" aria-hidden="true">🏍️</span><strong>MOTO</strong><small>Deslocações ágeis</small><span class="service-state">Requer validação</span></button>
+            <button class="service-card" type="button" data-go="express"><span class="service-icon" aria-hidden="true">🚌</span><strong>NOVA EXPRESS</strong><small>Linhas e bilhetes</small><span class="service-state active-service">Abrir serviço</span></button>
+            <button class="service-card" type="button" data-go="help"><span class="service-icon" aria-hidden="true">📦</span><strong>DELIVERY</strong><small>Encomendas</small><span class="service-state">Em preparação</span></button>
+            <button class="service-card" type="button" data-go="help"><span class="service-icon" aria-hidden="true">✈️</span><strong>TRANSFER</strong><small>Aeroporto e hotéis</small><span class="service-state">Em preparação</span></button>
+            <button class="service-card" type="button" data-go="help"><span class="service-icon" aria-hidden="true">🛣️</span><strong>INTERPROVINCIAL</strong><small>Entre províncias</small><span class="service-state">Em preparação</span></button>
+            <button class="service-card" type="button" data-go="help"><span class="service-icon" aria-hidden="true">💼</span><strong>EMPRESAS</strong><small>Mobilidade profissional</small><span class="service-state">Em preparação</span></button>
+            <button class="service-card" type="button" data-go="help"><span class="service-icon" aria-hidden="true">🛠️</span><strong>ASSISTÊNCIA</strong><small>Apoio na estrada</small><span class="service-state">Em preparação</span></button>
           </div>
-          <button class="hero-cta home-main-cta" data-go="ride">Definir destino <span aria-hidden="true">→</span></button>
+          <div class="home-status" role="status" aria-live="polite"><span class="status-dot" aria-hidden="true"></span><span>Sem viagem ativa. Os estados serão apresentados a partir dos dados reais da tua conta.</span></div>
+          <div class="section-head home-section"><h2>Acesso rápido</h2><span>O essencial num toque</span></div>
+          <div class="home-shortcuts">
+            <button class="home-shortcut" type="button" data-go="activity"><span aria-hidden="true">▤</span><strong>As minhas viagens</strong><span aria-hidden="true">→</span></button>
+            <button class="home-shortcut" type="button" data-go="account"><span aria-hidden="true">♙</span><strong>Conta e perfil</strong><span aria-hidden="true">→</span></button>
+            <button class="home-shortcut" type="button" data-go="driver"><span aria-hidden="true">🚘</span><strong>Quero conduzir</strong><span aria-hidden="true">→</span></button>
+            <button class="home-shortcut" type="button" data-go="help"><span aria-hidden="true">🛟</span><strong>Ajuda e segurança</strong><span aria-hidden="true">→</span></button>
+          </div>
+          <div class="notice"><span class="info" aria-hidden="true">ⓘ</span><div><strong>Sem disponibilidade inventada</strong>O mapa usa OpenStreetMap. A localização depende da tua autorização. COOL e EXECUTIVE consultam as tarifas configuradas; os restantes serviços só serão ativados depois de validar a integração real.</div></div>
         </div>
-        <div class="section-head home-section"><h2>Escolhe o teu serviço</h2><span>6 opções</span></div>
-        <div class="service-grid" aria-label="Serviços NOVA">
-          <button class="service-card" data-service="Cool"><span class="service-icon" aria-hidden="true">🚗</span><strong>Cool</strong><small>Viagens do dia a dia</small></button>
-          <button class="service-card" data-service="Executivo"><span class="service-icon" aria-hidden="true">🚘</span><strong>Executivo</strong><small>Mais conforto</small></button>
-          <button class="service-card" data-service="Bike"><span class="service-icon" aria-hidden="true">🏍️</span><strong>Bike</strong><small>Deslocações ágeis</small></button>
-          <button class="service-card" data-go="express"><span class="service-icon" aria-hidden="true">🚌</span><strong>NOVA Express</strong><small>Linhas, horários e bilhetes</small></button>
-          <button class="service-card" data-service="NOVA Interprovincial"><span class="service-icon" aria-hidden="true">🛣️</span><strong>Interprovincial</strong><small>Viagens entre províncias</small></button>
-          <button class="service-card" data-service="Delivery"><span class="service-icon" aria-hidden="true">📦</span><strong>Delivery</strong><small>Entrega de encomendas</small></button>
-        </div>
-        <div class="home-status" role="status"><span class="status-dot" aria-hidden="true"></span><span>Não há uma corrida ativa apresentada nesta interface.</span></div>
-        <div class="safety-strip"><div class="safety-strip-icon" aria-hidden="true">🛡️</div><div><strong>A tua viagem, com mais controlo</strong><span>Confirma a origem e o destino antes de avançar. A partilha de viagem e os contactos de emergência serão ativados numa fase própria, sem simular funções que ainda não estão ligadas.</span></div></div>
-        <div class="section-head home-section"><h2>Acesso rápido</h2><span>Menu principal</span></div>
-        <div class="quick-grid">
-          <button class="quick-card" data-go="ride"><span class="quick-icon" aria-hidden="true">🚖</span><strong>Preparar viagem</strong><small>Indica a origem e o destino.</small></button>
-          <button class="quick-card" data-go="express"><span class="quick-icon" aria-hidden="true">🚌</span><strong>Bilhetes NOVA Express</strong><small>Consultar linhas e reservar lugar.</small></button>
-          <button class="quick-card" data-go="account"><span class="quick-icon" aria-hidden="true">👤</span><strong>A tua conta</strong><small>Entra ou cria uma conta por e-mail.</small></button>
-          <button class="quick-card" data-go="driver"><span class="quick-icon" aria-hidden="true">🛞</span><strong>Quero conduzir</strong><small>Consulta a área do motorista.</small></button>
-          <button class="quick-card" data-go="help"><span class="quick-icon" aria-hidden="true">🛟</span><strong>Ajuda e segurança</strong><small>Vê o estado atual das funções.</small></button>
-        </div>
-        <div class="notice"><span class="info" aria-hidden="true">ⓘ</span><div><strong>Versão inicial da interface</strong>A autenticação por e-mail está configurada para o Supabase. O mapa, a pesquisa de locais e a localização autorizada do dispositivo estão preparados nesta interface. Os pedidos Cool/Executivo podem ser enviados após autenticação. Os restantes serviços aguardam validação das políticas de acesso antes de gravarem pedidos. Motoristas próximos só serão mostrados quando existir uma consulta segura autorizada; não são usados dados fictícios.</div></div>
       </section>
 
-      <section id="ride" class="screen" aria-labelledby="ride-title">
+<section id="ride" class="screen" aria-labelledby="ride-title">
         <button class="back" data-go="home">← Voltar ao início</button>
         <div class="panel"><div class="eyebrow">Serviços NOVA</div><h2 id="ride-title">Preparar pedido</h2><p>Escolhe um serviço, define origem e destino e inicia sessão para enviar um pedido real. A confirmação depende da resposta do Supabase; a rota e a estimativa do mapa não representam um preço confirmado.</p>
           <div class="ride-route"><label class="route-line"><span class="dot"></span><input id="origin" type="text" autocomplete="street-address" placeholder="Local de partida" aria-label="Local de partida"></label><label class="route-line"><span class="dot end"></span><input id="destination" type="text" autocomplete="street-address" placeholder="Para onde vais?" aria-label="Destino"></label></div>
@@ -301,6 +350,13 @@
       }
       document.querySelectorAll('[data-ride]').forEach(el=>el.addEventListener('click',()=>selectService(el.dataset.ride)));
       document.querySelectorAll('[data-service]').forEach(el=>el.addEventListener('click',()=>{selectService(el.dataset.service);go('ride');}));
+      function useHomeLocation(){
+        go('ride');
+        setTimeout(()=>{initNovaMap();if(novaMap){novaMap.invalidateSize();locateUser();}},220);
+      }
+      document.getElementById('home-use-location')?.addEventListener('click',useHomeLocation);
+      document.getElementById('home-origin-shortcut')?.addEventListener('click',useHomeLocation);
+
       let role='Passageiro';
       document.querySelectorAll('[data-role]').forEach(el=>el.addEventListener('click',()=>{
         role=el.dataset.role;
