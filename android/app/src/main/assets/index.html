@@ -54,7 +54,9 @@
     @media(max-width:380px){.nav-btn{font-size:9px}.nav-btn .nav-icon{font-size:18px}}
 
     .express-admin{margin-top:14px}.express-admin summary{font-weight:850;cursor:pointer;padding:5px 0}.express-admin-form{border-top:1px solid #eee;padding-top:10px;margin-top:14px}.express-admin-form h3{font-size:15px;margin:4px 0 10px}.express-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.express-admin-grid .wide{grid-column:1/-1}.express-admin-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:750}.express-admin-field input,.express-admin-field select,.express-admin-field textarea{min-width:0;width:100%;border:1px solid #dedede;border-radius:12px;padding:11px;background:#fff;color:var(--ink);font:inherit}.express-admin-checks{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;margin:10px 0}.express-admin-checks label{display:flex;align-items:center;gap:6px}.express-admin-list{font-size:12px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}.express-admin-item{padding:10px 0;border-bottom:1px solid #eee}.express-admin-item strong{color:var(--ink)}@media(max-width:420px){.express-admin-grid{grid-template-columns:1fr}.express-admin-grid .wide{grid-column:auto}}
-  </style>
+  
+    .payment-ride-list{display:grid;gap:10px;margin-top:14px}.payment-ride-card{border:1px solid var(--line);border-radius:15px;padding:13px}.payment-ride-card strong{display:block;font-size:13px}.payment-ride-card p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}.payment-panel{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.payment-panel h3{font-size:16px;margin:0 0 12px}.payment-panel select,.payment-panel input{width:100%;border:1px solid #dedede;border-radius:13px;padding:13px;background:#fff;color:var(--ink)}.payment-methods{display:grid;gap:9px}.payment-methods .secondary{margin-top:0}.payment-panel [hidden]{display:none!important}
+</style>
 </head>
 <body>
   <div class="app">
@@ -217,7 +219,27 @@
         <button class="back" data-go="home">← Voltar ao início</button><div class="panel"><div class="eyebrow">Apoio</div><h2 id="help-title">Ajuda e segurança</h2><p>A segurança é importante em cada etapa. As funções só serão apresentadas como ativas depois de ligadas a serviços reais.</p><div class="notice"><span class="info">ⓘ</span><div><strong>Estado atual</strong>Os contactos de emergência, partilha de viagem, localização em tempo real e suporte ainda não estão ativos nesta versão.</div></div><div class="notice"><span class="info">✓</span><div><strong>Próximos módulos</strong>Autenticação real, perfis, integração de mapas, pedidos de corrida e ferramentas de segurança.</div></div></div>
       </section>
 
-      <section id="activity" class="screen" aria-labelledby="activity-title"><button class="back" data-go="home">← Voltar ao início</button><div class="panel"><div class="eyebrow">A tua atividade</div><h2 id="activity-title">Viagens</h2><div class="empty-state"><div class="empty-icon">🧾</div><strong>Sem viagens para mostrar</strong><br>O histórico será apresentado quando existir uma ligação real ao backend e viagens registadas.</div></div></section>
+      <section id="activity" class="screen" aria-labelledby="activity-title">
+      <button class="back" data-go="home">← Voltar ao início</button>
+      <div class="panel">
+        <div class="eyebrow">A tua atividade</div><h2 id="activity-title">Viagens e pagamentos</h2>
+        <p>O histórico é carregado da tua conta NOVA. Só são mostradas viagens devolvidas pelo Supabase.</p>
+        <button class="secondary" id="activity-refresh" type="button">↻ Atualizar histórico</button>
+        <div id="activity-status" class="status" role="status" aria-live="polite">Inicia sessão para consultar as tuas viagens.</div>
+        <div id="completed-rides-list" class="payment-ride-list"></div>
+        <div id="payment-controls" class="payment-panel" hidden>
+          <h3>Liquidar uma viagem concluída</h3>
+          <label class="field"><span>Viagem</span><select id="payment-ride-select"><option value="">A carregar viagens concluídas…</option></select></label>
+          <label class="field"><span>Número Multicaixa Express (para Express)</span><input id="payment-mobile" inputmode="numeric" autocomplete="tel" maxlength="9" placeholder="9XXXXXXXX"></label>
+          <div class="payment-methods">
+            <button class="primary" id="pay-express-button" type="button">Multicaixa Express</button>
+            <button class="secondary" id="pay-reference-button" type="button">Pagamento por referência</button>
+          </div>
+          <div id="payment-status" class="status" role="status" aria-live="polite"></div>
+          <div class="notice"><span class="info">ⓘ</span><div><strong>Pagamento em sandbox</strong>O pedido não prova que houve pagamento. A confirmação final depende da validação do webhook do fornecedor. Se o estado ficar desconhecido, verifica a mesma tentativa antes de pedir outra.</div></div>
+        </div>
+      </div>
+    </section>
     </main>
     <nav class="bottom-nav" aria-label="Navegação principal"><button class="nav-btn active" data-go="home"><span class="nav-icon">⌂</span><span>Início</span></button><button class="nav-btn" data-go="ride"><span class="nav-icon">🚖</span><span>Táxi</span></button><button class="nav-btn" data-go="express"><span class="nav-icon">🚌</span><span>Express</span></button><button class="nav-btn" data-go="activity"><span class="nav-icon">▤</span><span>Viagens</span></button><button class="nav-btn" data-go="account"><span class="nav-icon">♙</span><span>Conta</span></button></nav>
   </div>
@@ -239,6 +261,7 @@
         if(id==='ride') setTimeout(()=>{initNovaMap();if(novaMap)novaMap.invalidateSize();},120);
         if(id==='express') setTimeout(loadExpressRoutes,80);
         if(id==='driver') setTimeout(loadDriverDashboard,80);
+        if(id==='activity') setTimeout(loadPassengerActivity,80);
       }
       document.addEventListener('click',event=>{const goElement=event.target.closest('[data-go]');if(goElement)go(goElement.dataset.go);});
       let rideType='Cool';
@@ -567,6 +590,118 @@
       } catch(e) {
         status.textContent='Não foi possível inicializar a autenticação. Revê a configuração antes de tentar novamente.';
       }
+      // Histórico real do passageiro e criação de intenção de pagamento via Edge Function.
+      let passengerCompletedRides=[];
+      let paymentRequestInProgress=false;
+      function paymentText(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+      function paymentMessage(message){const node=document.getElementById('payment-status');if(node)node.textContent=message;}
+      async function loadPassengerActivity(){
+        const statusNode=document.getElementById('activity-status');
+        const listNode=document.getElementById('completed-rides-list');
+        const controls=document.getElementById('payment-controls');
+        const refresh=document.getElementById('activity-refresh');
+        if(!statusNode||!listNode||!controls)return;
+        if(!supabaseClient){statusNode.textContent='A biblioteca Supabase não está disponível. Verifica a ligação à internet.';return;}
+        if(refresh){refresh.disabled=true;refresh.textContent='A atualizar…';}
+        statusNode.textContent='A consultar as viagens da tua conta…';
+        listNode.replaceChildren();
+        controls.hidden=true;
+        try{
+          const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+          if(sessionError)throw sessionError;
+          const user=sessionData?.session?.user;
+          if(!user){
+            statusNode.textContent='Inicia sessão para consultar o histórico e os pagamentos.';
+            const button=document.createElement('button');button.type='button';button.className='primary';button.textContent='Entrar na NOVA';button.dataset.go='account';listNode.appendChild(button);
+            return;
+          }
+          const {data,error}=await supabaseClient.from('nova_taxi_rides')
+            .select('id,categoria,origem_texto,destino_texto,estado,valor_final,valor_estimado,criado_em')
+            .eq('passageiro_id',user.id).order('criado_em',{ascending:false}).limit(30);
+          if(error)throw error;
+          const rides=Array.isArray(data)?data:[];
+          passengerCompletedRides=rides.filter(r=>String(r.estado||'').toLowerCase()==='concluida');
+          if(!rides.length){
+            statusNode.textContent='Ainda não existem viagens registadas nesta conta.';
+            return;
+          }
+          statusNode.textContent='Histórico carregado do Supabase: '+rides.length+' viagem(ns).';
+          rides.forEach(r=>{
+            const card=document.createElement('article');card.className='payment-ride-card';
+            const title=document.createElement('strong');
+            title.textContent=String(r.categoria||'Viagem').toUpperCase()+' · '+(r.estado||'Estado não indicado');
+            const details=document.createElement('p');
+            const amount=r.valor_final??r.valor_estimado;
+            const amountText=amount==null?'Valor por confirmar':Number(amount).toLocaleString('pt-AO')+' AOA';
+            const when=r.criado_em?new Date(r.criado_em).toLocaleString('pt-AO',{dateStyle:'short',timeStyle:'short'}):'Data não disponível';
+            details.textContent=(r.origem_texto||'Origem não indicada')+' → '+(r.destino_texto||'Destino não indicado')+' · '+amountText+' · '+when;
+            card.append(title,details);listNode.appendChild(card);
+          });
+          const payable=passengerCompletedRides.filter(r=>Number(r.valor_final??r.valor_estimado??0)>0);
+          const select=document.getElementById('payment-ride-select');
+          select.replaceChildren();
+          const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Seleciona uma viagem concluída';select.appendChild(placeholder);
+          payable.forEach(r=>{
+            const option=document.createElement('option');option.value=String(r.id);
+            option.textContent=String(r.categoria||'Viagem')+' · '+Number(r.valor_final??r.valor_estimado).toLocaleString('pt-AO')+' AOA · '+String(r.id).slice(0,8);
+            select.appendChild(option);
+          });
+          controls.hidden=false;
+          if(payable.length){
+            select.value=String(payable[0].id);
+            paymentMessage('Seleciona a forma de pagamento. O servidor valida a viagem e o estado do pagamento.');
+          }else{
+            paymentMessage('Não há viagens concluídas com valor positivo para iniciar pagamento.');
+          }
+          const canPay=payable.length>0;
+          document.getElementById('pay-express-button').disabled=!canPay;
+          document.getElementById('pay-reference-button').disabled=!canPay;
+          document.getElementById('payment-mobile').disabled=!canPay;
+        }catch(error){
+          statusNode.textContent='Não foi possível carregar o histórico: '+(error?.message||'erro desconhecido')+'. Confirma a sessão e as políticas RLS.';
+        }finally{
+          if(refresh){refresh.disabled=false;refresh.textContent='↻ Atualizar histórico';}
+        }
+      }
+      async function startPassengerPayment(method){
+        if(paymentRequestInProgress)return;
+        if(!supabaseClient){paymentMessage('Pagamento indisponível: a ligação Supabase não carregou.');return;}
+        const rideId=document.getElementById('payment-ride-select').value;
+        if(!rideId){paymentMessage('Seleciona uma viagem concluída antes de continuar.');return;}
+        const mobile=document.getElementById('payment-mobile').value.replace(/\D/g,'');
+        if(method==='multicaixa_express'&&!/^9\d{8}$/.test(mobile)){paymentMessage('Introduz um número Multicaixa Express válido com 9 dígitos, começado por 9.');return;}
+        paymentRequestInProgress=true;
+        const expressButton=document.getElementById('pay-express-button');
+        const referenceButton=document.getElementById('pay-reference-button');
+        expressButton.disabled=true;referenceButton.disabled=true;
+        paymentMessage('A solicitar instruções de pagamento ao servidor…');
+        try{
+          const body={ride_id:rideId,payment_method:method};
+          if(method==='multicaixa_express')body.mobile=mobile;
+          const {data,error}=await supabaseClient.functions.invoke('nova-taxi-create-payment-intent',{body});
+          if(error)throw error;
+          const payment=data?.payment||{};
+          const entity=payment.entidade_referencia||'';
+          const reference=payment.numero_referencia||'';
+          const state=payment.estado||'por confirmar';
+          if(entity||reference){
+            paymentMessage('Pedido recebido em sandbox. Estado: '+state+'.'+(entity?' Entidade: '+entity+'.':'')+(reference?' Referência: '+reference+'.':'')+' O pagamento só fica confirmado após validação do webhook. Não repitas o pedido se o estado for incerto.');
+          }else if(data?.status===202||data?.code===202){
+            paymentMessage('Estado do pagamento desconhecido. Não cries outro pedido; atualiza o histórico e confirma a mesma tentativa com o suporte.');
+          }else{
+            paymentMessage('O servidor recebeu a resposta, mas não devolveu referência. Estado não confirmado. '+String(data?.error||data?.message||'Verifica o estado no backend antes de tentar novamente.'));
+          }
+        }catch(error){
+          paymentMessage('Não foi possível confirmar a criação do pedido: '+(error?.message||'erro de ligação')+'. Não assumas que o pagamento foi criado nem repitas sem verificar o estado.');
+        }finally{
+          paymentRequestInProgress=false;
+          expressButton.disabled=false;referenceButton.disabled=false;
+        }
+      }
+      document.getElementById('activity-refresh').addEventListener('click',loadPassengerActivity);
+      document.getElementById('pay-express-button').addEventListener('click',()=>startPassengerPayment('multicaixa_express'));
+      document.getElementById('pay-reference-button').addEventListener('click',()=>startPassengerPayment('multicaixa_reference'));
+
       let driverLoadInProgress=false;
       const driverStatusLabels={solicitada:'Solicitada',ofertada:'Ofertada',aceita:'Aceite',motorista_chegando:'A caminho da recolha',em_curso:'Em curso',concluida:'Concluída',cancelada:'Cancelada'};
       function driverMessage(id,message){const node=document.getElementById(id);if(node)node.textContent=message;}
