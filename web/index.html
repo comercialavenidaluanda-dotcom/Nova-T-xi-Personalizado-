@@ -645,7 +645,7 @@
             details.textContent=(r.origem_texto||'Origem não indicada')+' → '+(r.destino_texto||'Destino não indicado')+' · '+amountText+' · '+when;
             card.append(title,details);listNode.appendChild(card);
           });
-          const payable=passengerCompletedRides.filter(r=>Number(r.valor_final??r.valor_estimado??0)>0);
+          const payable=passengerCompletedRides.filter(r=>Number(r.valor_final??0)>0);
           const select=document.getElementById('payment-ride-select');
           select.replaceChildren();
           const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Seleciona uma viagem concluída';select.appendChild(placeholder);
@@ -694,7 +694,7 @@
           const state=payment.estado||'por confirmar';
           if(entity||reference){
             paymentMessage('Pedido recebido em sandbox. Estado: '+state+'.'+(entity?' Entidade: '+entity+'.':'')+(reference?' Referência: '+reference+'.':'')+' O pagamento só fica confirmado após validação do webhook. Não repitas o pedido se o estado for incerto.');
-          }else if(data?.status===202||data?.code===202){
+          }else if(data?.status===202||data?.code===202||data?.error==='payment_status_unknown'||data?.retry_same_attempt===true){
             paymentMessage('Estado do pagamento desconhecido. Não cries outro pedido; atualiza o histórico e confirma a mesma tentativa com o suporte.');
           }else{
             paymentMessage('O servidor recebeu a resposta, mas não devolveu referência. Estado não confirmado. '+String(data?.error||data?.message||'Verifica o estado no backend antes de tentar novamente.'));
