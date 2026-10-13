@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="pt-AO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f97316">
+  <meta name="description" content="NOVA Táxi Personalizado — interface inicial de mobilidade.">
+  <title>NOVA Táxi Personalizado</title>
+  <style>
+    :root{--orange:#f97316;--orange-dark:#ea580c;--ink:#202124;--muted:#70757d;--line:#ececec;--surface:#fff7f1;--bg:#f7f7f8;--radius:22px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #fdba74;outline-offset:2px}.app{min-height:100dvh;max-width:760px;margin:0 auto;background:#fff;position:relative;box-shadow:0 0 40px #00000008;padding-bottom:94px}.topbar{height:76px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:#ffffffed;backdrop-filter:blur(12px);z-index:5}.brand{display:flex;align-items:center;gap:11px}.logo{width:45px;height:45px;border-radius:15px;background:var(--orange);display:grid;place-items:center;color:white;font-weight:900;font-size:21px;box-shadow:0 6px 15px #f9731630}.brand-name{font-size:17px;font-weight:850;letter-spacing:-.5px}.brand-sub{font-size:11px;color:var(--muted);margin-top:2px}.avatar{border:1px solid var(--line);background:white;border-radius:50%;width:43px;height:43px;display:grid;place-items:center;color:var(--orange-dark);font-size:20px}.content{padding:22px 18px 28px}.eyebrow{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.3px;color:var(--orange-dark)}h1{font-size:clamp(28px,6vw,39px);letter-spacing:-1.5px;line-height:1.1;margin:9px 0 10px}.intro{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 22px}.hero{background:linear-gradient(135deg,#fff5ec,#fff 75%);border:1px solid #ffead9;border-radius:26px;padding:23px 21px;overflow:hidden;position:relative}.hero:after{content:"";position:absolute;width:150px;height:150px;border:25px solid #fb923c18;border-radius:50%;right:-45px;top:-42px}.hero h2{font-size:23px;letter-spacing:-.7px;margin:0 0 8px;max-width:280px;position:relative;z-index:1}.hero p{font-size:13px;color:#6b625c;line-height:1.55;margin:0;max-width:280px;position:relative;z-index:1}.hero-mark{position:absolute;right:18px;bottom:14px;font-size:54px;transform:rotate(-8deg);filter:drop-shadow(0 8px 8px #f9731620)}.hero-cta{position:relative;z-index:1;margin-top:18px;width:auto;min-width:190px;padding:13px 17px;border:0;border-radius:13px;background:var(--orange);color:#fff;font-weight:800;box-shadow:0 7px 16px #f973162b}.service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.service-card{border:1px solid var(--line);border-radius:18px;padding:15px 13px;background:#fff;text-align:left;min-height:132px;transition:transform .15s,border-color .15s}.service-card:active{transform:scale(.985)}.service-card:hover,.service-card:focus-visible{border-color:#fdba74}.service-card .service-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:var(--surface);font-size:22px;margin-bottom:11px}.service-card strong{display:block;font-size:14px;margin-bottom:5px}.service-card small{display:block;color:var(--muted);font-size:11px;line-height:1.4}.service-card.selected{border:2px solid var(--orange);padding:14px 12px;background:#fff8f2}.home-status{display:flex;align-items:center;gap:9px;margin-top:17px;padding:12px 14px;border-radius:14px;background:#f8f8f8;color:#626262;font-size:12px}.home-status .status-dot{width:8px;height:8px;border-radius:50%;background:#b8b8b8;flex-shrink:0}.home-section{margin-top:26px}.section-head{display:flex;justify-content:space-between;align-items:center;margin:27px 0 13px}.section-head h2{font-size:17px;letter-spacing:-.3px;margin:0}.section-head span{font-size:12px;color:var(--muted)}.quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.quick-card{border:1px solid var(--line);border-radius:20px;padding:17px 15px;background:white;text-align:left;min-height:130px;transition:transform .15s,border-color .15s}.quick-card:active{transform:scale(.985)}.quick-card:hover{border-color:#fdba74}.quick-icon{width:43px;height:43px;border-radius:14px;background:var(--surface);display:grid;place-items:center;font-size:22px;margin-bottom:13px}.quick-card strong{display:block;font-size:14px;margin-bottom:5px}.quick-card small{display:block;color:var(--muted);font-size:12px;line-height:1.4}.notice{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:17px;padding:14px;margin-top:22px;color:var(--muted);font-size:12px;line-height:1.55}.notice .info{color:var(--orange-dark);font-size:18px}.notice strong{color:var(--ink);display:block;font-size:13px;margin-bottom:3px}.screen{display:none}.screen.active{display:block}.back{border:0;background:transparent;color:var(--orange-dark);font-weight:750;padding:7px 0 15px}.panel{border:1px solid var(--line);border-radius:22px;padding:19px;background:white}.panel h2{margin:0 0 7px;font-size:22px;letter-spacing:-.6px}.panel p{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.55}.field{display:block;margin:14px 0}.field span{display:block;font-size:12px;font-weight:750;margin-bottom:7px}.field input{width:100%;border:1px solid #dedede;border-radius:13px;padding:14px 13px;background:#fff;color:var(--ink)}.primary,.secondary{width:100%;border-radius:14px;padding:14px 16px;font-weight:800;border:0}.primary{background:var(--orange);color:white;box-shadow:0 7px 16px #f973162b}.primary:hover{background:var(--orange-dark)}.secondary{background:#fff4eb;color:var(--orange-dark);margin-top:10px}.role-grid,.ride-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:18px 0}.choice{border:1px solid var(--line);border-radius:17px;padding:16px 12px;text-align:left;background:#fff}.choice.selected{border:2px solid var(--orange);background:#fff8f2;padding:15px 11px}.choice .emoji{font-size:25px;display:block;margin-bottom:9px}.choice strong{font-size:14px;display:block}.choice small{color:var(--muted);font-size:11px;display:block;margin-top:5px;line-height:1.4}.status{font-size:12px;color:var(--muted);margin-top:12px;min-height:18px}.ride-route{border:1px solid var(--line);border-radius:16px;padding:13px 14px;margin:12px 0}.route-line{display:flex;align-items:center;gap:10px}.dot{width:10px;height:10px;border-radius:50%;background:var(--orange);flex-shrink:0}.dot.end{background:#333}.route-line input{border:0;border-bottom:1px solid #eee;border-radius:0;padding:11px 0;width:100%;outline:none}.route-line+.route-line{margin-top:8px}.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);padding:10px 8px calc(10px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr);background:#ffffffed;backdrop-filter:blur(12px);border-top:1px solid var(--line);z-index:10}.nav-btn{border:0;background:transparent;color:#858585;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;font-size:10px;font-weight:700}.nav-btn .nav-icon{font-size:20px;line-height:1.1}.nav-btn.active{color:var(--orange-dark)}.nav-btn.active .nav-icon{transform:translateY(-1px)}.empty-state{text-align:center;padding:30px 15px;color:var(--muted);font-size:13px;line-height:1.6}.empty-state .empty-icon{font-size:36px;margin-bottom:10px}.footer-note{text-align:center;color:#999;font-size:10px;padding:15px 10px 0}
+    /* NOVA mobility refresh: cleaner hierarchy and ride-selection feedback */
+    .topbar{height:72px}.logo{border-radius:14px;background:linear-gradient(145deg,#fb923c,#ea580c);box-shadow:0 8px 18px #f9731638}.avatar{box-shadow:0 3px 10px #00000008}
+    .hero{min-height:205px;padding:24px 22px;background:radial-gradient(circle at 95% 12%,#fed7aa 0,transparent 30%),linear-gradient(125deg,#fff0e3,#fffaf6 62%,#fff);border-color:#ffdfc5;box-shadow:0 12px 30px #f973160d}.hero:after{width:165px;height:165px;border:22px solid #f9731612;right:-46px;top:auto;bottom:-84px}.hero h2{font-size:25px;max-width:255px}.hero p{max-width:255px}.hero-mark{right:20px;bottom:22px;font-size:61px;transform:rotate(-7deg)}
+    .service-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.service-card{min-height:123px;padding:13px 11px;border-radius:19px;box-shadow:0 3px 12px #00000004}.service-card .service-icon{width:43px;height:43px;border-radius:14px;background:linear-gradient(145deg,#fff0e3,#fff8f2);font-size:23px}.service-card strong{font-size:13px;letter-spacing:-.2px}.service-card small{font-size:10px}.service-card.selected{box-shadow:0 5px 15px #f9731614}
+    .section-head{margin-top:25px}.section-head h2{font-size:18px}.home-status{border:1px solid #ededed;background:#fff;padding:13px 14px;border-radius:15px}.home-status .status-dot{background:#f59e0b;box-shadow:0 0 0 4px #fff1dc}
+    .panel{border-radius:25px;box-shadow:0 8px 26px #00000005}.primary{background:linear-gradient(100deg,#f97316,#ea580c);box-shadow:0 8px 18px #f973162b}.choice{transition:border-color .16s,background .16s,transform .16s}.choice:active{transform:scale(.985)}.choice.selected{box-shadow:0 5px 15px #f9731610}.map-frame{height:330px;border-radius:19px}.map-driver-count{box-shadow:0 4px 15px #f9731608}
+    .ride-summary{margin:14px 0 16px;border:1px solid #ffdfc5;border-radius:18px;background:linear-gradient(120deg,#fff7f0,#fff);padding:16px}.ride-summary-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.ride-summary-title{font-size:14px;font-weight:850}.ride-summary-badge{font-size:10px;font-weight:800;color:#c2410c;background:#ffead9;padding:6px 9px;border-radius:999px}.ride-summary-main{display:flex;justify-content:space-between;gap:10px;align-items:flex-end;margin-top:14px}.ride-summary-service{font-size:22px;font-weight:900;letter-spacing:-.6px}.ride-summary-price{font-size:12px;font-weight:800;text-align:right;color:#9a3412}.ride-summary-note{font-size:11px;color:#78716c;line-height:1.5;margin-top:7px}.ride-summary-route{font-size:12px;color:#57534e;line-height:1.6;margin-top:12px;padding-top:11px;border-top:1px solid #f4dfd0;overflow-wrap:anywhere}
+    .safety-strip{display:flex;align-items:flex-start;gap:11px;padding:15px;border-radius:17px;background:#f8fafc;border:1px solid #edf0f2;margin-top:18px}.safety-strip-icon{width:38px;height:38px;flex-shrink:0;display:grid;place-items:center;border-radius:12px;background:#fff;font-size:19px}.safety-strip strong{display:block;font-size:13px;margin:2px 0 4px}.safety-strip span{display:block;color:#70757d;font-size:11px;line-height:1.5}
+    @media(max-width:390px){.service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero-mark{opacity:.7;right:12px;font-size:49px}.hero h2,.hero p{max-width:230px}.map-frame{height:285px}}
+    @media(min-width:600px){.service-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    .map-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:14px 0 10px}.map-tools input{min-width:0;width:100%;border:1px solid #dedede;border-radius:12px;padding:12px;background:#fff}.map-action{border:0;border-radius:12px;padding:11px 13px;background:#fff0e4;color:var(--orange-dark);font-weight:800;font-size:12px}.map-location{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}.map-frame{height:310px;width:100%;border:1px solid #e8e8e8;border-radius:17px;overflow:hidden;background:#f2f2f2;z-index:0}.map-meta{display:flex;gap:8px;align-items:flex-start;margin-top:10px;padding:11px 12px;background:#fafafa;border-radius:12px;color:#626262;font-size:12px;line-height:1.45}.map-meta strong{color:#222}.map-driver-count{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #ffead9;background:#fff8f2;border-radius:14px;padding:13px 14px;margin-top:12px}.map-driver-count strong{font-size:13px}.map-driver-count span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:4px}.count-value{font-size:13px;font-weight:850;color:var(--orange-dark);text-align:right;max-width:130px}.map-results{margin:6px 0 0;padding:0;list-style:none}.map-results button{width:100%;border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px;text-align:left;margin-top:6px;font-size:12px}.leaflet-container{font-family:inherit}.leaflet-control-attribution{font-size:9px!important}
+    @media(min-width:600px){.content{padding:28px 28px}.topbar{padding-inline:28px}.hero{padding:29px}.quick-card{min-height:145px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+    /* Home screen aligned with the map-first NOVA ride-hailing concept */
+    .content{padding-top:20px}.content>.screen#home>.intro{margin-bottom:18px}.home-trip-card{border:1px solid #f0efed;border-radius:25px;background:#fff;overflow:hidden;box-shadow:0 10px 30px #1c19170b}.home-trip-fields{padding:15px 16px 12px}.home-trip-point,.home-destination{display:flex;align-items:center;gap:12px;min-height:48px}.home-point-dot{width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--orange);margin:0 2px;flex-shrink:0}.home-trip-point>div,.home-destination>span:nth-child(2){display:flex;flex-direction:column;gap:4px;flex:1;text-align:left}.home-trip-point small,.home-destination small{font-size:9px;letter-spacing:1px;color:#898989;font-weight:800}.home-trip-point strong,.home-destination strong{font-size:13px;font-weight:750;color:#252525}.home-point-arrow{font-size:23px;color:var(--orange);padding:0 5px}.home-trip-divider{height:1px;background:#f0efed;margin:7px 0 7px 25px}.home-destination{width:100%;border:0;background:#f7f7f7;border-radius:14px;padding:10px 12px}.home-destination-icon{font-size:25px;color:var(--orange);width:24px;text-align:center}.home-destination-arrow{font-size:20px;color:var(--orange);font-weight:800}.home-map-preview{height:150px;position:relative;overflow:hidden;background:#f1f3ef}.home-map-preview svg{width:100%;height:100%;display:block}.map-preview-label{position:absolute;left:12px;bottom:11px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eee;border-radius:999px;padding:8px 11px;font-size:10px;font-weight:750;box-shadow:0 3px 12px #0000000a}.map-preview-label>span:last-child{color:var(--orange);font-size:14px}.map-preview-dot{width:7px;height:7px;border-radius:50%;background:#f97316}.home-main-cta{display:block;width:calc(100% - 28px);margin:14px auto 14px;min-width:0}.home-trip-card .hero-cta{border-radius:14px}.service-card{min-height:115px}.service-card .service-icon{margin-bottom:9px}.safety-strip{margin-top:18px}
+    @media(max-width:390px){.home-map-preview{height:130px}.home-trip-fields{padding:12px}.home-destination strong,.home-trip-point strong{font-size:12px}}
+
+    /* UX polish: clearer labels, accessible tap targets, and a real map preview */
+    #home-mini-map{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+    .home-map-preview .leaflet-control-attribution,.home-map-preview .leaflet-control-zoom{display:none}
+    .home-map-preview .leaflet-container{background:#edf1eb}
+    .map-preview-label{z-index:2;pointer-events:none}
+    .hero-cta,.primary,.secondary,.map-action,.nav-btn,.back,.avatar,.home-destination,.service-card,.choice{touch-action:manipulation;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease}
+    .hero-cta,.primary{min-height:49px;letter-spacing:.1px}
+    .map-action{min-height:42px;border:1px solid #ffe0c8;box-shadow:0 2px 6px #f9731608}
+    .map-action:active,.hero-cta:active,.primary:active,.secondary:active{transform:scale(.985)}
+    .service-card:focus-visible,.choice:focus-visible,.nav-btn:focus-visible,.map-action:focus-visible{outline:3px solid #fdba74;outline-offset:2px}
+    .status,.map-meta{overflow-wrap:anywhere;line-height:1.55}
+    @media(max-width:420px){.map-tools{grid-template-columns:minmax(0,1fr)}.map-tools .map-action{width:100%}.map-location .map-action{flex:1 1 calc(50% - 8px)}.hero-cta{width:100%}.service-grid{gap:9px}.service-card{padding:12px 10px}}
+
+    .driver-welcome{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 18px}.driver-welcome h1{margin:7px 0;font-size:31px}.driver-welcome p{margin:0;color:var(--muted);font-size:13px}.driver-avatar{width:65px;height:65px;flex:0 0 65px;border-radius:21px;display:grid;place-items:center;font-size:31px;background:linear-gradient(145deg,#fff0e3,#fff8f2);border:1px solid #ffdfc5}.driver-status-card{border:1px solid #ffdfc5;border-radius:23px;padding:18px;background:linear-gradient(135deg,#fff4e9,#fff 80%);margin-bottom:13px}.driver-status-row{display:flex;justify-content:space-between;align-items:center;gap:12px}.driver-status-label{display:block;color:#78716c;font-size:11px;font-weight:750;margin-bottom:5px}.driver-status-row strong{font-size:19px;letter-spacing:-.4px}.driver-pill{border-radius:999px;padding:7px 10px;background:#f3f4f6;color:#57534e;font-size:10px;font-weight:850;white-space:nowrap}.driver-pill.approved{background:#dcfce7;color:#166534}.driver-pill.pending{background:#ffedd5;color:#9a3412}.driver-pill.inactive{background:#fee2e2;color:#991b1b}.driver-status-card>p{font-size:12px;line-height:1.55;color:#6b625c;margin:11px 0 4px}.driver-status-card .secondary{margin-top:12px}.driver-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:0 0 13px}.driver-stat{border:1px solid var(--line);border-radius:18px;padding:15px;background:#fff}.driver-stat span,.driver-stat small{display:block;color:var(--muted);font-size:11px}.driver-stat strong{display:block;font-size:26px;letter-spacing:-.8px;margin:5px 0}.driver-stat small{font-size:10px}.driver-panel{margin-bottom:13px;padding:17px}.driver-panel .section-head{margin:0 0 13px}.driver-work-state{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:16px;background:#fff}.driver-work-icon{width:39px;height:39px;display:grid;place-items:center;flex:0 0 39px;border-radius:13px;background:#fff0e3;font-size:21px}.driver-work-state strong{font-size:13px}.driver-work-state p{margin:5px 0 0;font-size:12px;color:var(--muted);line-height:1.5}.driver-panel .notice{margin-top:12px}.driver-rides-list,.driver-vehicles-list{display:grid;gap:10px}.driver-ride-card,.driver-vehicle-card{border:1px solid var(--line);border-radius:16px;padding:13px}.driver-ride-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.driver-ride-top strong,.driver-vehicle-card strong{font-size:13px}.driver-ride-state{font-size:10px;font-weight:800;border-radius:999px;padding:5px 8px;background:#f3f4f6;color:#57534e}.driver-ride-route{font-size:12px;line-height:1.6;color:#57534e;overflow-wrap:anywhere}.driver-ride-meta{display:flex;justify-content:space-between;gap:10px;margin-top:10px;padding-top:9px;border-top:1px solid #f0f0f0;color:var(--muted);font-size:10px}.driver-vehicle-card p{margin:5px 0 0;font-size:11px;color:var(--muted)}.driver-empty{border:1px dashed #e5e5e5;border-radius:15px;padding:19px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.55}.driver-empty strong{display:block;color:var(--ink);margin-bottom:4px}
+    @media(max-width:380px){.driver-welcome h1{font-size:27px}.driver-status-row strong{font-size:17px}.driver-panel{padding:14px}}
+    /* NOVA Express module */
+    .express-banner{border-radius:22px;padding:20px;background:linear-gradient(130deg,#fff0e2,#fffaf6);border:1px solid #ffdfc5;margin-bottom:16px}
+    .express-banner h2{margin:7px 0;font-size:24px;letter-spacing:-.7px}.express-banner p{font-size:13px;line-height:1.55;color:#6b625c;margin:0}
+    .express-step{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #f0f0f0}.express-step:last-child{border-bottom:0}.express-step-num{width:31px;height:31px;flex-shrink:0;border-radius:11px;background:#fff0e4;color:#c2410c;display:grid;place-items:center;font-weight:900}
+    .express-step strong{display:block;font-size:13px;margin:2px 0 5px}.express-step small{display:block;color:var(--muted);font-size:11px;line-height:1.5}
+    .express-field{display:block;margin:14px 0}.express-field span{display:block;font-size:12px;font-weight:750;margin-bottom:7px}.express-field select,.express-field input{width:100%;border:1px solid #dedede;border-radius:13px;padding:13px;background:#fff;color:var(--ink)}
+    .express-route-card{border:1px solid #eee;border-radius:17px;padding:14px;margin:10px 0;background:#fff}.express-route-card strong{font-size:14px;display:block}.express-route-card p{margin:7px 0;color:var(--muted);font-size:12px}.express-route-meta{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:11px;color:#9a3412;font-weight:800}.express-chip{display:inline-block;border-radius:999px;padding:5px 8px;background:#fff0e4;color:#c2410c;font-size:10px;font-weight:800}
+    .ticket-card{border:1px dashed #fb923c;border-radius:18px;padding:16px;text-align:center;background:#fffaf6;margin-top:14px}.ticket-card h3{margin:0 0 6px}.ticket-card p{font-size:12px;color:var(--muted);line-height:1.5}.ticket-code{font-size:18px;font-weight:900;letter-spacing:1px;overflow-wrap:anywhere;color:#9a3412}.ticket-qr{display:flex;justify-content:center;margin:12px auto;min-height:8px}.ticket-qr canvas,.ticket-qr img{max-width:190px;height:auto}
+    .bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+    @media(max-width:380px){.nav-btn{font-size:9px}.nav-btn .nav-icon{font-size:18px}}
+
+    .express-admin{margin-top:14px}.express-admin summary{font-weight:850;cursor:pointer;padding:5px 0}.express-admin-form{border-top:1px solid #eee;padding-top:10px;margin-top:14px}.express-admin-form h3{font-size:15px;margin:4px 0 10px}.express-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.express-admin-grid .wide{grid-column:1/-1}.express-admin-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:750}.express-admin-field input,.express-admin-field select,.express-admin-field textarea{min-width:0;width:100%;border:1px solid #dedede;border-radius:12px;padding:11px;background:#fff;color:var(--ink);font:inherit}.express-admin-checks{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;margin:10px 0}.express-admin-checks label{display:flex;align-items:center;gap:6px}.express-admin-list{font-size:12px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}.express-admin-item{padding:10px 0;border-bottom:1px solid #eee}.express-admin-item strong{color:var(--ink)}@media(max-width:420px){.express-admin-grid{grid-template-columns:1fr}.express-admin-grid .wide{grid-column:auto}}
+  
+    .payment-ride-list{display:grid;gap:10px;margin-top:14px}.payment-ride-card{border:1px solid var(--line);border-radius:15px;padding:13px}.payment-ride-card strong{display:block;font-size:13px}.payment-ride-card p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}.payment-panel{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.payment-panel h3{font-size:16px;margin:0 0 12px}.payment-panel select,.payment-panel input{width:100%;border:1px solid #dedede;border-radius:13px;padding:13px;background:#fff;color:var(--ink)}.payment-methods{display:grid;gap:9px}.payment-methods .secondary{margin-top:0}.payment-panel [hidden]{display:none!important}
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><div class="logo" aria-hidden="true">N</div><div><div class="brand-name">NOVA Táxi</div><div class="brand-sub">Personalizado</div></div></div>
+      <button class="avatar" aria-label="Abrir conta" data-go="account">♙</button>
+    </header>
+    <main class="content">
+      <section id="home" class="screen active" aria-labelledby="welcome-title">
+        <div class="eyebrow">NOVA • MOBILIDADE</div>
+        <h1 id="welcome-title">Para onde vamos?</h1>
+        <p class="intro">Escolhe o destino, compara os serviços e prepara a tua viagem com controlo em cada etapa.</p>
+        <div class="home-trip-card">
+          <div class="home-trip-fields">
+            <div class="home-trip-point"><span class="home-point-dot"></span><div><small>LOCAL DE PARTIDA</small><strong>Usar a minha localização</strong></div><span class="home-point-arrow">⌖</span></div>
+            <div class="home-trip-divider"></div>
+            <button class="home-destination" data-go="ride"><span class="home-destination-icon">⌕</span><span><small>DESTINO</small><strong>Para onde queres ir?</strong></span><span class="home-destination-arrow">→</span></button>
+          </div>
+          <div class="home-map-preview" aria-label="Mapa real OpenStreetMap centrado inicialmente em Luanda; não representa a tua posição até autorizares a localização">
+            <div id="home-mini-map" aria-label="Pré-visualização do mapa real"></div>
+            <div class="map-preview-label"><span class="map-preview-dot"></span> Mapa real · Luanda <span>↗</span></div>
+          </div>
+          <button class="hero-cta home-main-cta" data-go="ride">Definir destino <span aria-hidden="true">→</span></button>
+        </div>
+        <div class="section-head home-section"><h2>Escolhe o teu serviço</h2><span>6 opções</span></div>
+        <div class="service-grid" aria-label="Serviços NOVA">
+          <button class="service-card" data-service="Cool"><span class="service-icon" aria-hidden="true">🚗</span><strong>Cool</strong><small>Viagens do dia a dia</small></button>
+          <button class="service-card" data-service="Executivo"><span class="service-icon" aria-hidden="true">🚘</span><strong>Executivo</strong><small>Mais conforto</small></button>
+          <button class="service-card" data-service="Bike"><span class="service-icon" aria-hidden="true">🏍️</span><strong>Bike</strong><small>Deslocações ágeis</small></button>
+          <button class="service-card" data-go="express"><span class="service-icon" aria-hidden="true">🚌</span><strong>NOVA Express</strong><small>Linhas, horários e bilhetes</small></button>
+          <button class="service-card" data-service="NOVA Interprovincial"><span class="service-icon" aria-hidden="true">🛣️</span><strong>Interprovincial</strong><small>Viagens entre províncias</small></button>
+          <button class="service-card" data-service="Delivery"><span class="service-icon" aria-hidden="true">📦</span><strong>Delivery</strong><small>Entrega de encomendas</small></button>
+        </div>
+        <div class="home-status" role="status"><span class="status-dot" aria-hidden="true"></span><span>Não há uma corrida ativa apresentada nesta interface.</span></div>
+        <div class="safety-strip"><div class="safety-strip-icon" aria-hidden="true">🛡️</div><div><strong>A tua viagem, com mais controlo</strong><span>Confirma a origem e o destino antes de avançar. A partilha de viagem e os contactos de emergência serão ativados numa fase própria, sem simular funções que ainda não estão ligadas.</span></div></div>
+        <div class="section-head home-section"><h2>Acesso rápido</h2><span>Menu principal</span></div>
+        <div class="quick-grid">
+          <button class="quick-card" data-go="ride"><span class="quick-icon" aria-hidden="true">🚖</span><strong>Preparar viagem</strong><small>Indica a origem e o destino.</small></button>
+          <button class="quick-card" data-go="express"><span class="quick-icon" aria-hidden="true">🚌</span><strong>Bilhetes NOVA Express</strong><small>Consultar linhas e reservar lugar.</small></button>
+          <button class="quick-card" data-go="account"><span class="quick-icon" aria-hidden="true">👤</span><strong>A tua conta</strong><small>Entra ou cria uma conta por e-mail.</small></button>
+          <button class="quick-card" data-go="driver"><span class="quick-icon" aria-hidden="true">🛞</span><strong>Quero conduzir</strong><small>Consulta a área do motorista.</small></button>
+          <button class="quick-card" data-go="help"><span class="quick-icon" aria-hidden="true">🛟</span><strong>Ajuda e segurança</strong><small>Vê o estado atual das funções.</small></button>
+        </div>
+        <div class="notice"><span class="info" aria-hidden="true">ⓘ</span><div><strong>Versão inicial da interface</strong>A autenticação por e-mail está configurada para o Supabase. O mapa, a pesquisa de locais e a localização autorizada do dispositivo estão preparados nesta interface. Os pedidos Cool/Executivo podem ser enviados após autenticação. Os restantes serviços aguardam validação das políticas de acesso antes de gravarem pedidos. Motoristas próximos só serão mostrados quando existir uma consulta segura autorizada; não são usados dados fictícios.</div></div>
+      </section>
+
+      <section id="ride" class="screen" aria-labelledby="ride-title">
+        <button class="back" data-go="home">← Voltar ao início</button>
+        <div class="panel"><div class="eyebrow">Serviços NOVA</div><h2 id="ride-title">Preparar pedido</h2><p>Escolhe um serviço, define origem e destino e inicia sessão para enviar um pedido real. A confirmação depende da resposta do Supabase; a rota e a estimativa do mapa não representam um preço confirmado.</p>
+          <div class="ride-route"><label class="route-line"><span class="dot"></span><input id="origin" type="text" autocomplete="street-address" placeholder="Local de partida" aria-label="Local de partida"></label><label class="route-line"><span class="dot end"></span><input id="destination" type="text" autocomplete="street-address" placeholder="Para onde vais?" aria-label="Destino"></label></div>
+          <div class="section-head"><h2>Mapa e zona</h2><span>Mapa real</span></div>
+          <div class="map-tools"><input id="map-search" type="search" placeholder="Pesquisar origem: bairro, rua ou local…" aria-label="Pesquisar origem no mapa"><button id="map-search-button" class="map-action" type="button">Buscar origem</button></div>
+          <div class="map-tools"><input id="destination-search" type="search" placeholder="Pesquisar para onde vais…" aria-label="Pesquisar destino no mapa"><button id="destination-search-button" class="map-action" type="button">Buscar destino</button></div>
+          <div class="map-location"><button id="map-my-location" class="map-action" type="button">◎ Usar a minha localização</button><button id="map-live-location" class="map-action" type="button">▶ Acompanhar GPS</button><button id="map-stop-location" class="map-action" type="button" hidden>■ Parar GPS</button><button id="map-set-origin" class="map-action" type="button">Escolher origem no mapa</button><button id="map-set-destination" class="map-action" type="button">Escolher destino no mapa</button></div>
+          <div id="nova-map" class="map-frame" role="application" aria-label="Mapa interativo. Toca no mapa para escolher a origem."></div>
+          <div id="map-status" class="map-meta" role="status" aria-live="polite">O mapa usa dados reais. Autoriza a localização para identificar a tua posição; depois escolhe o destino para ver o percurso.</div>
+          <div id="route-info" class="map-meta" role="status" aria-live="polite">O percurso e a distância aparecerão depois de selecionar a origem e o destino.</div>
+          <div class="map-driver-count"><div><strong>Motoristas nesta zona</strong><span id="driver-count-note">O número só será mostrado quando existirem localizações GPS reais e uma consulta segura disponível.</span></div><div id="driver-count-value" class="count-value">Sem dados GPS</div></div>
+          <ul id="map-results" class="map-results" hidden></ul>
+          <div class="section-head"><h2>Serviço selecionado</h2></div>
+          <div class="ride-grid">
+            <button class="choice selected" data-ride="Cool"><span class="emoji">🚗</span><strong>Cool</strong><small>Viagens do dia a dia.</small></button>
+            <button class="choice" data-ride="Executivo"><span class="emoji">🚘</span><strong>Executivo</strong><small>Mais conforto.</small></button>
+            <button class="choice" data-ride="Bike"><span class="emoji">🏍️</span><strong>Bike</strong><small>Deslocações ágeis.</small></button>
+            <button class="choice" data-ride="NOVA Express"><span class="emoji">⚡</span><strong>NOVA Express</strong><small>Pedido rápido.</small></button>
+            <button class="choice" data-ride="NOVA Interprovincial"><span class="emoji">🛣️</span><strong>Interprovincial</strong><small>Entre províncias.</small></button>
+            <button class="choice" data-ride="Delivery"><span class="emoji">📦</span><strong>Delivery</strong><small>Entrega de encomendas.</small></button>
+          </div>
+          <div class="ride-summary" aria-live="polite"><div class="ride-summary-top"><div class="ride-summary-title">Resumo da viagem</div><span class="ride-summary-badge">Pré-visualização</span></div><div class="ride-summary-main"><div><div class="ride-summary-service" id="summary-service">Cool</div><div class="ride-summary-note" id="summary-service-note">Viagens do dia a dia</div></div><div class="ride-summary-price" id="summary-price">Preço indisponível</div></div><div class="ride-summary-route" id="summary-route">Define a origem e o destino para rever o percurso.</div><div class="ride-summary-note">A estimativa não é uma cotação final. O pedido só é confirmado quando o Supabase devolver o registo criado.</div></div>
+          <button class="primary" id="ride-continue">Continuar</button><div id="ride-status" class="status" role="status" aria-live="polite">Ainda não foi criado nenhum pedido.</div>
+        </div>
+      </section>
+
+      <section id="express" class="screen" aria-labelledby="express-title">
+        <button class="back" data-go="home">← Voltar ao início</button>
+        <div class="express-banner"><div class="eyebrow">NOVA • TRANSPORTE COLETIVO</div><h2 id="express-title">NOVA Express</h2><p>Consulta linhas e horários oficiais, escolhe uma paragem autorizada e prepara a reserva do teu lugar. Só serão mostrados dados publicados pela NOVA — sem rotas ou horários inventados.</p></div>
+        <div class="panel">
+          <div class="section-head"><h2>Encontrar uma linha</h2><span id="express-route-count">Dados reais</span></div>
+          <label class="express-field"><span>Origem / terminal</span><select id="express-origin"><option value="">Todas as origens</option></select></label>
+          <label class="express-field"><span>Destino</span><select id="express-destination"><option value="">Todos os destinos</option></select></label>
+          <button class="primary" id="express-search">Pesquisar linhas</button>
+          <div id="express-status" class="status" role="status" aria-live="polite">A verificar as linhas publicadas no Supabase…</div>
+          <div id="express-routes-list"><div class="empty-state"><div class="empty-icon">🚌</div>A consultar linhas oficiais…</div></div>
+        </div>
+        <div class="panel" style="margin-top:14px">
+          <div class="section-head"><h2>Reservar lugar</h2><span>Bilhete digital</span></div>
+          <p>Seleciona uma partida publicada. A reserva exige sessão iniciada e disponibilidade confirmada pelo servidor.</p>
+          <label class="express-field"><span>Partida</span><select id="express-departure" disabled><option value="">Seleciona primeiro uma linha</option></select></label>
+          <label class="express-field"><span>Embarque autorizado</span><select id="express-boarding-stop" disabled><option value="">Seleciona uma partida</option></select></label>
+          <label class="express-field"><span>Desembarque autorizado</span><select id="express-alighting-stop" disabled><option value="">Seleciona uma partida</option></select></label>
+          <label class="express-field"><span>Número do lugar</span><input id="express-seat" inputmode="numeric" maxlength="4" placeholder="Ex.: 12" disabled></label>
+          <button class="primary" id="express-book" disabled>Reservar e gerar bilhete</button>
+          <div id="express-booking-status" class="status" role="status" aria-live="polite">As reservas serão ativadas depois da instalação e validação das estruturas seguras da NOVA Express.</div>
+          <div id="express-ticket" hidden></div>
+        </div>
+        <details class="panel express-admin" id="express-admin-panel">
+          <summary>Gestão da operação · acesso administrativo</summary>
+          <p>Esta área depende de autorização verificada no servidor. Não cria rotas de demonstração; publica apenas os dados inseridos por um administrador autorizado.</p>
+          <div id="express-admin-status" class="status" role="status" aria-live="polite">Carrega a gestão para verificar as permissões.</div>
+          <button class="secondary" type="button" id="express-admin-refresh">Atualizar dados operacionais</button>
+          <form id="express-admin-route-form" class="express-admin-form">
+            <h3>1. Criar linha</h3><div class="express-admin-grid">
+              <label class="express-admin-field">Código<input id="xa-route-code" required maxlength="20" placeholder="Ex.: NX-01"></label>
+              <label class="express-admin-field">Nome da linha<input id="xa-route-name" required maxlength="100" placeholder="Nome oficial"></label>
+              <label class="express-admin-field">Origem<input id="xa-route-origin" required maxlength="120" placeholder="Terminal de origem"></label>
+              <label class="express-admin-field">Destino<input id="xa-route-destination" required maxlength="120" placeholder="Terminal de destino"></label>
+              <label class="express-admin-field wide">Descrição<textarea id="xa-route-description" rows="2" maxlength="500" placeholder="Informação oficial opcional"></textarea></label>
+            </div><div class="express-admin-checks"><label><input id="xa-route-active" type="checkbox"> Publicar linha imediatamente</label></div>
+            <button class="primary" type="submit">Guardar linha</button>
+          </form>
+          <form id="express-admin-stop-form" class="express-admin-form">
+            <h3>2. Adicionar terminal ou paragem</h3><div class="express-admin-grid">
+              <label class="express-admin-field wide">Linha<select id="xa-stop-route" required><option value="">Atualiza os dados primeiro</option></select></label>
+              <label class="express-admin-field">Nome<input id="xa-stop-name" required maxlength="120" placeholder="Nome real do local"></label>
+              <label class="express-admin-field">Tipo<select id="xa-stop-type"><option value="terminal">Terminal</option><option value="paragem">Paragem</option></select></label>
+              <label class="express-admin-field">Ordem na linha<input id="xa-stop-order" required type="number" min="1" step="1" value="1"></label>
+              <label class="express-admin-field">Latitude (opcional)<input id="xa-stop-lat" type="number" min="-90" max="90" step="any" placeholder="-8.8"></label>
+              <label class="express-admin-field">Longitude (opcional)<input id="xa-stop-lon" type="number" min="-180" max="180" step="any" placeholder="13.2"></label>
+            </div><div class="express-admin-checks"><label><input id="xa-stop-active" type="checkbox"> Local ativo</label><label><input id="xa-stop-board" type="checkbox"> Permite embarque</label><label><input id="xa-stop-alight" type="checkbox"> Permite desembarque</label></div>
+            <button class="primary" type="submit">Guardar paragem</button>
+          </form>
+          <form id="express-admin-departure-form" class="express-admin-form">
+            <h3>3. Criar partida e preço</h3><div class="express-admin-grid">
+              <label class="express-admin-field wide">Linha<select id="xa-dep-route" required><option value="">Atualiza os dados primeiro</option></select></label>
+              <label class="express-admin-field">Data e hora de partida<input id="xa-dep-time" required type="datetime-local"></label>
+              <label class="express-admin-field">Chegada prevista (opcional)<input id="xa-dep-arrival" type="datetime-local"></label>
+              <label class="express-admin-field">Preço (AOA)<input id="xa-dep-price" required type="number" min="0" step="50" placeholder="Preço aprovado"></label>
+              <label class="express-admin-field">Lugares totais<input id="xa-dep-seats" required type="number" min="1" max="300" step="1" value="20"></label>
+              <label class="express-admin-field wide">Estado<select id="xa-dep-state"><option value="rascunho">Rascunho (não visível)</option><option value="publicada">Publicar partida</option></select></label>
+            </div><button class="primary" type="submit">Guardar partida</button>
+          </form>
+          <div class="express-admin-form"><h3>Resumo operacional</h3><div id="express-admin-summary" class="express-admin-list">Sem dados carregados.</div></div>
+        </details>
+        <div class="notice"><span class="info">ⓘ</span><div><strong>Embarque com controlo</strong>O QR identifica a reserva. A autorização final de embarque deverá ser validada pelo sistema, e um bilhete usado não poderá ser utilizado novamente. A confirmação de pagamento será integrada separadamente.</div></div>
+      </section>
+
+      <section id="account" class="screen" aria-labelledby="account-title">
+        <button class="back" data-go="home">← Voltar ao início</button>
+        <div class="panel"><div class="eyebrow">A tua conta</div><h2 id="account-title">Entrar ou registar</h2><p>Escolhe o teu perfil e usa o teu e-mail real. O registo usa e-mail e palavra-passe. O perfil é criado pelo Supabase; motoristas novos ficam sujeitos à aprovação da administração.</p>
+          <div class="role-grid"><button class="choice selected" data-role="Passageiro"><span class="emoji">🧍</span><strong>Passageiro</strong><small>Quero pedir corridas.</small></button><button class="choice" data-role="Motorista"><span class="emoji">🚗</span><strong>Motorista</strong><small>Quero conduzir na NOVA.</small></button></div>
+          <label class="field"><span>Nome completo (para registo)</span><input id="full-name" type="text" autocomplete="name" placeholder="O teu nome"></label>
+          <label class="field"><span>E-mail</span><input id="email" type="email" autocomplete="email" placeholder="nome@exemplo.com" required></label>
+          <label class="field"><span>Palavra-passe</span><input id="password" type="password" autocomplete="current-password" placeholder="Introduz a palavra-passe"></label>
+          <button class="primary" id="login-button">Entrar</button><button class="secondary" id="register-button">Criar conta</button><button class="secondary" id="logout-button" hidden>Sair da conta</button><div id="account-status" class="status" role="status" aria-live="polite">A preparar ligação segura ao serviço de autenticação…</div>
+        </div>
+      </section>
+
+      <section id="driver" class="screen" aria-labelledby="driver-title">
+        <button class="back" data-go="home">← Voltar ao início</button>
+        <div class="driver-welcome"><div><div class="eyebrow">Painel do motorista</div><h1 id="driver-title">Boa viagem.</h1><p id="driver-greeting">A tua jornada começa aqui.</p></div><div class="driver-avatar" aria-hidden="true">🛞</div></div>
+        <div class="driver-status-card"><div class="driver-status-row"><div><span class="driver-status-label">Estado da conta</span><strong id="driver-account-state">A verificar…</strong></div><span id="driver-state-pill" class="driver-pill">A verificar</span></div><p id="driver-status-message">A consultar a tua aprovação e disponibilidade no Supabase.</p><button id="driver-refresh" class="secondary">↻ Atualizar painel</button></div>
+        <div class="driver-stats"><div class="driver-stat"><span>Corridas ativas</span><strong id="driver-active-count">—</strong><small>Associadas à tua conta</small></div><div class="driver-stat"><span>Veículos</span><strong id="driver-vehicle-count">—</strong><small>Registados no sistema</small></div></div>
+        <div class="panel driver-panel"><div class="section-head"><h2>Jornada</h2><span id="driver-live-label">Dados reais</span></div><div id="driver-work-state" class="driver-work-state"><span class="driver-work-icon">⏳</span><div><strong>A carregar a jornada</strong><p>Vamos confirmar se a tua conta está aprovada e disponível.</p></div></div><div id="driver-work-note" class="notice"><span class="info">ⓘ</span><div><strong>Disponibilidade controlada</strong>A entrada online será ativada depois de validarmos as regras de segurança que protegem o estado de aprovação do motorista.</div></div></div>
+        <div class="panel driver-panel"><div class="section-head"><h2>As minhas corridas</h2><span id="driver-rides-label">Últimas corridas</span></div><div id="driver-rides-list" class="driver-rides-list"><div class="empty-state"><div class="empty-icon">🚘</div>A consultar as tuas corridas…</div></div></div>
+        <div class="panel driver-panel"><div class="section-head"><h2>Veículos</h2><span>Perfil de motorista</span></div><div id="driver-vehicles-list" class="driver-vehicles-list"><div class="empty-state">A consultar veículos registados…</div></div><button class="secondary" id="driver-vehicle-help">Como registar ou atualizar o veículo</button><div id="driver-vehicle-status" class="status" role="status" aria-live="polite"></div></div>
+        <div class="notice"><span class="info">ⓘ</span><div><strong>Sem corridas inventadas</strong>Este painel só apresenta informações devolvidas pelo Supabase. Os pedidos disponíveis para aceitar serão mostrados quando existir uma política segura de distribuição de corridas para motoristas aprovados.</div></div>
+      </section>
+
+      <section id="help" class="screen" aria-labelledby="help-title">
+        <button class="back" data-go="home">← Voltar ao início</button><div class="panel"><div class="eyebrow">Apoio</div><h2 id="help-title">Ajuda e segurança</h2><p>A segurança é importante em cada etapa. As funções só serão apresentadas como ativas depois de ligadas a serviços reais.</p><div class="notice"><span class="info">ⓘ</span><div><strong>Estado atual</strong>Os contactos de emergência, partilha de viagem, localização em tempo real e suporte ainda não estão ativos nesta versão.</div></div><div class="notice"><span class="info">✓</span><div><strong>Próximos módulos</strong>Autenticação real, perfis, integração de mapas, pedidos de corrida e ferramentas de segurança.</div></div></div>
+      </section>
+
+      <section id="activity" class="screen" aria-labelledby="activity-title">
+      <button class="back" data-go="home">← Voltar ao início</button>
+      <div class="panel">
+        <div class="eyebrow">A tua atividade</div><h2 id="activity-title">Viagens e pagamentos</h2>
+        <p>O histórico é carregado da tua conta NOVA. Só são mostradas viagens devolvidas pelo Supabase.</p>
+        <button class="secondary" id="activity-refresh" type="button">↻ Atualizar histórico</button>
+        <div id="activity-status" class="status" role="status" aria-live="polite">Inicia sessão para consultar as tuas viagens.</div>
+        <div id="completed-rides-list" class="payment-ride-list"></div>
+        <div id="payment-controls" class="payment-panel" hidden>
+          <h3>Liquidar uma viagem concluída</h3>
+          <label class="field"><span>Viagem</span><select id="payment-ride-select"><option value="">A carregar viagens concluídas…</option></select></label>
+          <label class="field"><span>Número Multicaixa Express (para Express)</span><input id="payment-mobile" inputmode="numeric" autocomplete="tel" maxlength="9" placeholder="9XXXXXXXX"></label>
+          <div class="payment-methods">
+            <button class="primary" id="pay-express-button" type="button">Multicaixa Express</button>
+            <button class="secondary" id="pay-reference-button" type="button">Pagamento por referência</button>
+          </div>
+          <div id="payment-status" class="status" role="status" aria-live="polite"></div>
+          <div class="notice"><span class="info">ⓘ</span><div><strong>Pagamento em sandbox</strong>O pedido não prova que houve pagamento. A confirmação final depende da validação do webhook do fornecedor. Se o estado ficar desconhecido, verifica a mesma tentativa antes de pedir outra.</div></div>
+        </div>
+      </div>
+    </section>
+    </main>
+    <nav class="bottom-nav" aria-label="Navegação principal"><button class="nav-btn active" data-go="home"><span class="nav-icon">⌂</span><span>Início</span></button><button class="nav-btn" data-go="ride"><span class="nav-icon">🚖</span><span>Táxi</span></button><button class="nav-btn" data-go="express"><span class="nav-icon">🚌</span><span>Express</span></button><button class="nav-btn" data-go="activity"><span class="nav-icon">▤</span><span>Viagens</span></button><button class="nav-btn" data-go="account"><span class="nav-icon">♙</span><span>Conta</span></button></nav>
+  </div>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    (()=>{
+      const screens=[...document.querySelectorAll('.screen')];
+      const navButtons=[...document.querySelectorAll('.nav-btn')];
+      function go(id){
+        const target=document.getElementById(id);
+        if(!target)return;
+        screens.forEach(s=>s.classList.toggle('active',s.id===id));
+        navButtons.forEach(b=>b.classList.toggle('active',b.dataset.go===id || (id==='driver'&&b.dataset.go==='account') || (id==='help'&&b.dataset.go==='home')));
+        window.scrollTo({top:0,behavior:'smooth'});
+        if(id==='home' && homeMiniMap) setTimeout(()=>homeMiniMap && homeMiniMap.invalidateSize(),120);
+        if(id==='ride') setTimeout(()=>{initNovaMap();if(novaMap)novaMap.invalidateSize();},120);
+        if(id==='express') setTimeout(loadExpressRoutes,80);
+        if(id==='driver') setTimeout(loadDriverDashboard,80);
+        if(id==='activity') setTimeout(loadPassengerActivity,80);
+      }
+      document.addEventListener('click',event=>{const goElement=event.target.closest('[data-go]');if(goElement)go(goElement.dataset.go);});
+      let rideType='Cool';
+      let fareRules={};
+      function updateFareDisplay(){
+        const price=document.getElementById('summary-price');
+        const note=document.getElementById('summary-service-note');
+        const key=rideType==='Cool'?'cool':rideType==='Executivo'?'executivo':null;
+        if(!price)return;
+        if(!key){price.textContent='Tarifa não configurada';return;}
+        const fare=fareRules[key] || fareRules[String(key).toLowerCase()];
+        if(!fare){price.textContent='Tarifa indisponível';return;}
+        const minimum=Number(fare.preco_minimo ?? fare.tarifa_base);
+        price.textContent='Mínimo '+minimum.toLocaleString('pt-AO')+' Kz';
+        if(note)note.textContent=(note.textContent.split(' · Tarifa:')[0]||'')+' · Tarifa: '+Number(fare.preco_por_km).toLocaleString('pt-AO')+' Kz/km e '+Number(fare.preco_por_minuto).toLocaleString('pt-AO')+' Kz/min; inclui '+Number(fare.km_incluidos)+' km e '+Number(fare.minutos_incluidos)+' min.';
+      }
+      function selectService(service){
+        rideType=service;
+        document.querySelectorAll('[data-ride]').forEach(b=>b.classList.toggle('selected',b.dataset.ride===service));
+        document.querySelectorAll('[data-service]').forEach(b=>b.classList.toggle('selected',b.dataset.service===service));
+        const statusEl=document.getElementById('ride-status');
+        if(statusEl) statusEl.textContent='Serviço selecionado: '+rideType+'. Define a origem e o destino; o envio depende da configuração real deste serviço.';
+        const notes={'Cool':'Viagens do dia a dia','Executivo':'Mais conforto','Bike':'Deslocações ágeis','NOVA Express':'Pedido rápido','NOVA Interprovincial':'Viagens entre províncias','Delivery':'Entrega de encomendas'};
+        const summaryService=document.getElementById('summary-service');
+        const summaryNote=document.getElementById('summary-service-note');
+        if(summaryService)summaryService.textContent=rideType;
+        if(summaryNote)summaryNote.textContent=notes[rideType]||'Serviço NOVA';
+        updateFareDisplay();
+      }
+      document.querySelectorAll('[data-ride]').forEach(el=>el.addEventListener('click',()=>selectService(el.dataset.ride)));
+      document.querySelectorAll('[data-service]').forEach(el=>el.addEventListener('click',()=>{selectService(el.dataset.service);go('ride');}));
+      let role='Passageiro';
+      document.querySelectorAll('[data-role]').forEach(el=>el.addEventListener('click',()=>{
+        role=el.dataset.role;
+        document.querySelectorAll('[data-role]').forEach(b=>b.classList.toggle('selected',b===el));
+      }));
+      document.getElementById('destination').addEventListener('input',()=>{destinationPoint=null;if(destinationMarker && novaMap){novaMap.removeLayer(destinationMarker);destinationMarker=null;}if(routeLayer && novaMap){novaMap.removeLayer(routeLayer);routeLayer=null;}if(routeInfo)routeInfo.textContent='Confirma novamente o destino no mapa ou na pesquisa para calcular a rota.';});
+      ['origin','destination'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{
+        const o=document.getElementById('origin').value.trim();const d=document.getElementById('destination').value.trim();
+        document.getElementById('summary-route').textContent=o&&d?('Origem: '+o+' · Destino: '+d):'Define a origem e o destino para rever o percurso.';
+      }));
+      let requestInProgress=false;
+      document.getElementById('ride-continue').addEventListener('click',async()=>{
+        const origin=document.getElementById('origin').value.trim();
+        const destination=document.getElementById('destination').value.trim();
+        const rideStatus=document.getElementById('ride-status');
+        const continueButton=document.getElementById('ride-continue');
+        if(requestInProgress)return;
+        if(!origin||!destination){rideStatus.textContent='Preenche a origem e o destino antes de continuar.';return;}
+        document.getElementById('summary-route').textContent='Origem: '+origin+' · Destino: '+destination;
+        if(!supabaseClient){rideStatus.textContent='Não foi possível ligar ao Supabase. Nenhum pedido foi enviado.';return;}
+        requestInProgress=true;continueButton.disabled=true;continueButton.textContent='A verificar…';
+        try{
+          const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+          if(sessionError)throw sessionError;
+          if(!sessionData.session){rideStatus.textContent='Inicia sessão com o teu e-mail antes de enviar um pedido. Nenhum pedido foi criado.';go('account');return;}
+          const user=sessionData.session.user;
+          const {data:profile,error:profileError}=await supabaseClient.from('nova_taxi_profiles').select('id,tipo_utilizador,ativo').eq('id',user.id).maybeSingle();
+          if(profileError)throw new Error('Falha ao validar o perfil: '+profileError.message);
+          if(!profile){rideStatus.textContent='O perfil NOVA Táxi não foi encontrado para esta conta. Nenhum pedido foi criado. Verifica o trigger de criação do perfil.';return;}
+          if(profile.tipo_utilizador!=='passageiro'||profile.ativo!==true){rideStatus.textContent='Apenas uma conta de passageiro ativa pode criar pedidos neste ecrã.';return;}
+          let payload,table;
+          if(rideType==='Cool'||rideType==='Executivo'){
+            table='nova_taxi_rides';
+            payload={passageiro_id:user.id,categoria:rideType==='Cool'?'cool':'executivo',origem_texto:origin,destino_texto:destination,origem_lat:originPoint?originPoint.lat:null,origem_lng:originPoint?originPoint.lng:null,destino_lat:destinationPoint?destinationPoint.lat:null,destino_lng:destinationPoint?destinationPoint.lng:null,estado:'solicitada'};
+          }else{
+            rideStatus.textContent='O serviço '+rideType+' ainda não está ligado ao fluxo de pedidos validado. Nenhum pedido foi enviado; não serão feitas gravações numa tabela sem confirmar as políticas e os campos.';return;
+          }
+          continueButton.textContent='A enviar…';
+          rideStatus.textContent='A enviar o pedido ao Supabase…';
+          const {data,error}=await supabaseClient.from(table).insert(payload).select('id,estado').single();
+          if(error)throw error;
+          rideStatus.textContent='Pedido registado no Supabase. Referência: '+data.id+'. Estado: '+(data.estado||'solicitado')+'. Isto não significa que um motorista já aceitou.';
+          const badge=document.querySelector('.ride-summary-badge');if(badge)badge.textContent='Pedido enviado';
+        }catch(error){
+          const message=error&&error.message?error.message:'Erro desconhecido';
+          rideStatus.textContent='Não foi possível validar ou criar o pedido: '+message+'. Nenhum sucesso será presumido; verifica a sessão, o perfil e as políticas RLS.';
+        }finally{requestInProgress=false;continueButton.disabled=false;continueButton.textContent='Continuar';}
+      });
+      // Pré-visualização com mapa real; o centro inicial é Luanda, não a posição pessoal do utilizador.
+      let homeMiniMap=null;
+      function initHomeMiniMap(){
+        const node=document.getElementById('home-mini-map');
+        if(!node || !window.L || homeMiniMap)return;
+        homeMiniMap=L.map(node,{zoomControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false,keyboard:false,touchZoom:false}).setView([-8.8390,13.2894],11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(homeMiniMap);
+        setTimeout(()=>homeMiniMap && homeMiniMap.invalidateSize(),100);
+      }
+      initHomeMiniMap();
+
+      // Mapa real, geolocalização autorizada pelo utilizador e percurso rodoviário.
+      // A localização contínua só é iniciada após ação explícita e pode ser parada pelo utilizador.
+      const mapStatus=document.getElementById('map-status');
+      const driverCountValue=document.getElementById('driver-count-value');
+      const driverCountNote=document.getElementById('driver-count-note');
+      const routeInfo=document.getElementById('route-info');
+      let novaMap=null, originMarker=null, destinationMarker=null, userMarker=null, routeLayer=null;
+      let originPoint=null, destinationPoint=null, choosingOrigin=false, choosingDestination=false, watchId=null;
+      function setMapStatus(message){ if(mapStatus) mapStatus.textContent=message; }
+      function reverseLookup(latlng, target){
+        const url='https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+encodeURIComponent(latlng.lat)+'&lon='+encodeURIComponent(latlng.lng);
+        fetch(url,{headers:{'Accept':'application/json'}}).then(r=>{if(!r.ok)throw new Error('reverse geocoding indisponível');return r.json();}).then(data=>{
+          if(data && data.display_name){document.getElementById(target==='destination'?'destination':'origin').value=data.display_name;setMapStatus((target==='destination'?'Destino':'Origem')+' selecionado: '+data.display_name);}
+        }).catch(()=>setMapStatus('Ponto selecionado pelas coordenadas. Se o endereço não aparecer, escreve-o manualmente.'));
+      }
+      function setPoint(latlng,target,label){
+        const ll={lat:Number(latlng.lat),lng:Number(latlng.lng)};
+        if(target==='destination'){
+          destinationPoint=ll;
+          if(destinationMarker)destinationMarker.setLatLng(ll);else destinationMarker=L.marker(ll).addTo(novaMap).bindPopup('Destino');
+          if(label)document.getElementById('destination').value=label;else document.getElementById('destination').value=ll.lat.toFixed(6)+', '+ll.lng.toFixed(6);
+        }else{
+          originPoint=ll;
+          if(originMarker)originMarker.setLatLng(ll);else originMarker=L.marker(ll).addTo(novaMap).bindPopup('Origem');
+          if(label)document.getElementById('origin').value=label;else document.getElementById('origin').value=ll.lat.toFixed(6)+', '+ll.lng.toFixed(6);
+        }
+        updateRoute();
+      }
+      function initNovaMap(){
+        if(!window.L){setMapStatus('O mapa não carregou. Verifica a internet e volta a abrir a página.');return;}
+        if(novaMap)return;
+        novaMap=L.map('nova-map',{zoomControl:true}).setView([-8.8390,13.2894],12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'}).addTo(novaMap);
+        novaMap.on('click',e=>{
+          if(choosingDestination){setPoint(e.latlng,'destination');choosingDestination=false;reverseLookup(e.latlng,'destination');}
+          else if(choosingOrigin || !originPoint){setPoint(e.latlng,'origin');choosingOrigin=false;reverseLookup(e.latlng,'origin');}
+          else {setPoint(e.latlng,'destination');reverseLookup(e.latlng,'destination');}
+        });
+        setMapStatus('Mapa real carregado. A localização inicial do mapa não é a tua localização pessoal.');
+        driverCountValue.textContent='Sem dados GPS';
+        driverCountNote.textContent='Não há posições GPS de motoristas registadas para mostrar disponibilidade real. Não exibimos motoristas fictícios.';
+      }
+      function locateUser(){
+        if(!navigator.geolocation){setMapStatus('Este dispositivo/navegador não disponibiliza geolocalização. Pesquisa a origem manualmente.');return;}
+        setMapStatus('O dispositivo vai pedir autorização para aceder à localização…');
+        navigator.geolocation.getCurrentPosition(pos=>{
+          const ll={lat:pos.coords.latitude,lng:pos.coords.longitude};
+          if(novaMap)novaMap.setView(ll,16);
+          if(userMarker)userMarker.setLatLng(ll);else userMarker=L.circleMarker(ll,{radius:9,color:'#fff',weight:3,fillColor:'#f97316',fillOpacity:1}).addTo(novaMap).bindPopup('A tua localização atual');
+          setPoint(ll,'origin','A minha localização atual');
+          setMapStatus('Localização atual obtida com autorização do dispositivo. A procurar o endereço…');
+          reverseLookup(ll,'origin');
+        },err=>{setMapStatus(err.code===1?'Autorização de localização recusada. Podes pesquisar ou escolher o ponto no mapa.':'Não foi possível obter a localização. Confirma as permissões e se o GPS está ligado.');},{enableHighAccuracy:true,timeout:15000,maximumAge:10000});
+      }
+      function startLiveLocation(){
+        if(!navigator.geolocation){setMapStatus('Este dispositivo não disponibiliza GPS pelo navegador.');return;}
+        if(watchId!==null)return;
+        setMapStatus('A solicitar autorização para acompanhar a tua localização em tempo real…');
+        watchId=navigator.geolocation.watchPosition(pos=>{
+          const ll={lat:pos.coords.latitude,lng:pos.coords.longitude};
+          if(userMarker)userMarker.setLatLng(ll);else userMarker=L.circleMarker(ll,{radius:9,color:'#fff',weight:3,fillColor:'#f97316',fillOpacity:1}).addTo(novaMap).bindPopup('A tua localização atual');
+          if(!originPoint){setPoint(ll,'origin','A minha localização atual');}
+          else {originPoint=ll;if(originMarker)originMarker.setLatLng(ll);updateRoute();}
+          novaMap.setView(ll,16);
+          setMapStatus('GPS ativo: posição atualizada pelo dispositivo. Podes parar o acompanhamento a qualquer momento.');
+        },err=>{stopLiveLocation();setMapStatus(err.code===1?'Autorização recusada: o acompanhamento GPS não foi iniciado.':'Sinal GPS indisponível. Confirma as permissões e a ligação do dispositivo.');},{enableHighAccuracy:true,maximumAge:3000,timeout:20000});
+        document.getElementById('map-live-location').hidden=true;document.getElementById('map-stop-location').hidden=false;
+      }
+      function stopLiveLocation(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}const start=document.getElementById('map-live-location'),stop=document.getElementById('map-stop-location');if(start)start.hidden=false;if(stop)stop.hidden=true;}
+      async function searchPlace(target){
+        const input=document.getElementById(target==='destination'?'destination-search':'map-search');const q=input.value.trim();const results=document.getElementById('map-results');
+        if(!q){setMapStatus(target==='destination'?'Escreve o destino que procuras.':'Escreve o bairro, rua ou local de origem.');return;}
+        setMapStatus('A pesquisar '+(target==='destination'?'destino':'origem')+'…');results.hidden=true;results.innerHTML='';
+        try{
+          const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&q='+encodeURIComponent(q+', Angola');
+          const response=await fetch(url,{headers:{'Accept':'application/json'}});if(!response.ok)throw new Error('Pesquisa temporariamente indisponível');
+          const items=await response.json();if(!items.length){setMapStatus('Não foram encontrados locais. Tenta outro nome ou escolhe o ponto diretamente no mapa.');return;}
+          results.hidden=false;
+          items.forEach(item=>{const li=document.createElement('li');const b=document.createElement('button');b.type='button';b.textContent=item.display_name;b.addEventListener('click',()=>{const ll={lat:Number(item.lat),lng:Number(item.lon)};novaMap.setView(ll,16);setPoint(ll,target,item.display_name);results.hidden=true;setMapStatus((target==='destination'?'Destino':'Origem')+' selecionado.');});li.appendChild(b);results.appendChild(li);});
+          setMapStatus('Escolhe um resultado para definir '+(target==='destination'?'o destino':'a origem')+'.');
+        }catch(e){setMapStatus('A pesquisa de endereços falhou. Verifica a ligação e tenta novamente.');}
+      }
+      async function updateRoute(){
+        if(!novaMap||!originPoint||!destinationPoint){if(routeInfo)routeInfo.textContent='Seleciona a origem e o destino para calcular o percurso rodoviário.';return;}
+        if(routeInfo)routeInfo.textContent='A calcular o percurso…';
+        try{
+          const url='https://router.project-osrm.org/route/v1/driving/'+originPoint.lng+','+originPoint.lat+';'+destinationPoint.lng+','+destinationPoint.lat+'?overview=full&geometries=geojson&steps=true';
+          const res=await fetch(url);if(!res.ok)throw new Error('routing unavailable');const data=await res.json();if(data.code!=='Ok'||!data.routes||!data.routes.length)throw new Error('no route');
+          const route=data.routes[0];if(routeLayer)routeLayer.remove();routeLayer=L.geoJSON(route.geometry,{style:{color:'#f97316',weight:5,opacity:.9}}).addTo(novaMap);
+          novaMap.fitBounds(routeLayer.getBounds(),{padding:[24,24]});
+          const km=(route.distance/1000).toLocaleString('pt-AO',{maximumFractionDigits:1});const mins=Math.max(1,Math.round(route.duration/60));
+          routeInfo.textContent='Percurso rodoviário aproximado: '+km+' km · '+mins+' min em condições ideais. O trânsito real e o preço ainda não estão incluídos.';
+        }catch(e){if(routeInfo)routeInfo.textContent='Não foi possível calcular a rota agora. Confirma os locais ou tenta novamente; a distância e o tempo não serão inventados.';}
+      }
+      document.getElementById('map-search-button').addEventListener('click',()=>searchPlace('origin'));
+      document.getElementById('map-search').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchPlace('origin');}});
+      document.getElementById('destination-search-button').addEventListener('click',()=>searchPlace('destination'));
+      document.getElementById('destination-search').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchPlace('destination');}});
+      document.getElementById('map-my-location').addEventListener('click',locateUser);
+      document.getElementById('map-live-location').addEventListener('click',startLiveLocation);
+      document.getElementById('map-stop-location').addEventListener('click',()=>{stopLiveLocation();setMapStatus('Acompanhamento GPS parado. A tua localização deixou de ser atualizada por esta página.');});
+      document.getElementById('map-set-origin').addEventListener('click',()=>{choosingOrigin=true;choosingDestination=false;setMapStatus('Toca no ponto exato do mapa que queres usar como origem.');});
+      document.getElementById('map-set-destination').addEventListener('click',()=>{choosingDestination=true;choosingOrigin=false;setMapStatus('Toca no ponto exato do mapa que queres usar como destino.');});
+      window.addEventListener('pagehide',stopLiveLocation);
+      // Leaflet recalcula as dimensões quando a secção de pedido fica visível.
+      document.querySelectorAll('[data-go="ride"], [data-service]').forEach(el=>el.addEventListener('click',()=>setTimeout(()=>{initNovaMap();if(novaMap)novaMap.invalidateSize();},120)));
+
+      let expressRoutes=[];
+      let expressDepartures=[];
+      let expressStops=[];
+      let expressSelectedRoute=null;
+      const expressStatus=document.getElementById('express-status');
+      const expressRoutesList=document.getElementById('express-routes-list');
+      const expressDepartureSelect=document.getElementById('express-departure');
+      const expressBoardingSelect=document.getElementById('express-boarding-stop');
+      const expressAlightingSelect=document.getElementById('express-alighting-stop');
+      const expressSeatInput=document.getElementById('express-seat');
+      const expressBookButton=document.getElementById('express-book');
+      function expressEscape(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+      function expressSelectOptions(select,rows,labelFn,placeholder){
+        select.innerHTML='<option value="">'+expressEscape(placeholder)+'</option>';
+        rows.forEach(row=>{const o=document.createElement('option');o.value=row.id;o.textContent=labelFn(row);select.appendChild(o);});
+      }
+      async function loadExpressRoutes(){
+        if(!supabaseClient){expressStatus.textContent='A ligação ao Supabase não está disponível. Nenhum dado foi carregado.';return;}
+        expressStatus.textContent='A consultar as linhas publicadas…';
+        const {data,error}=await supabaseClient.from('nova_express_routes').select('id,codigo,nome,origem_nome,destino_nome,descricao,ativo').eq('ativo',true).order('nome');
+        if(error){
+          expressRoutes=[];expressRoutesList.innerHTML='<div class="empty-state"><div class="empty-icon">🚌</div><strong>Linhas ainda não disponíveis</strong><br>O esquema NOVA Express ainda não está instalado neste Supabase. Nenhuma rota fictícia foi apresentada.</div>';
+          expressStatus.textContent=error.code==='42P01'||/does not exist|schema cache/i.test(error.message||'')?'Auditoria confirmada: falta criar a estrutura de linhas da NOVA Express.':'Não foi possível consultar as linhas: '+(error.message||'erro do Supabase');
+          document.getElementById('express-route-count').textContent='Sem estrutura';
+          return;
+        }
+        expressRoutes=data||[];
+        document.getElementById('express-route-count').textContent=expressRoutes.length+' linha(s)';
+        const origins=[...new Map(expressRoutes.map(r=>[r.origem_nome,{id:r.origem_nome,nome:r.origem_nome}])).values()].filter(r=>r.nome);
+        const destinations=[...new Map(expressRoutes.map(r=>[r.destino_nome,{id:r.destino_nome,nome:r.destino_nome}])).values()].filter(r=>r.nome);
+        expressSelectOptions(document.getElementById('express-origin'),origins,r=>r.nome,'Todas as origens');
+        expressSelectOptions(document.getElementById('express-destination'),destinations,r=>r.nome,'Todos os destinos');
+        renderExpressRoutes();
+        expressStatus.textContent=expressRoutes.length?'Linhas carregadas do Supabase. Horários e lugares dependem das partidas publicadas.':'Ainda não existem linhas publicadas pela operação.';
+      }
+      function renderExpressRoutes(){
+        const origin=document.getElementById('express-origin').value;
+        const destination=document.getElementById('express-destination').value;
+        const rows=expressRoutes.filter(r=>(!origin||r.origem_nome===origin)&&(!destination||r.destino_nome===destination));
+        if(!rows.length){expressRoutesList.innerHTML='<div class="empty-state"><div class="empty-icon">🚌</div><strong>Sem linhas para este filtro</strong><br>Experimenta outra origem ou destino. Só mostramos linhas publicadas.</div>';return;}
+        expressRoutesList.innerHTML=rows.map(r=>'<article class="express-route-card"><div class="express-route-meta"><span class="express-chip">'+expressEscape(r.codigo||'NOVA EXPRESS')+'</span><span>LINHA PUBLICADA</span></div><strong>'+expressEscape(r.nome||'Linha NOVA Express')+'</strong><p>'+expressEscape(r.origem_nome||'Origem por publicar')+' → '+expressEscape(r.destino_nome||'Destino por publicar')+'</p><p>'+expressEscape(r.descricao||'Linha de transporte coletivo.')+'</p><button class="secondary" type="button" data-express-route="'+expressEscape(r.id)+'">Ver partidas e reservar</button></article>').join('');
+        expressRoutesList.querySelectorAll('[data-express-route]').forEach(b=>b.addEventListener('click',()=>selectExpressRoute(b.dataset.expressRoute)));
+      }
+      async function selectExpressRoute(routeId){
+        expressSelectedRoute=expressRoutes.find(r=>r.id===routeId)||null;
+        if(!expressSelectedRoute)return;
+        expressDepartureSelect.disabled=true;expressBoardingSelect.disabled=true;expressAlightingSelect.disabled=true;expressSeatInput.disabled=true;expressBookButton.disabled=true;
+        expressDepartureSelect.innerHTML='<option value="">A carregar partidas…</option>';
+        const {data,error}=await supabaseClient.from('nova_express_departures').select('id,partida_em,chegada_prevista,preco_aoa,lugares_total,estado').eq('rota_id',routeId).eq('estado','publicada').gte('partida_em',new Date().toISOString()).order('partida_em');
+        if(error){expressDepartureSelect.innerHTML='<option value="">Partidas indisponíveis</option>';document.getElementById('express-booking-status').textContent='Não foi possível carregar as partidas. A estrutura da operação pode ainda não estar instalada.';return;}
+        expressDepartures=data||[];
+        expressSelectOptions(expressDepartureSelect,expressDepartures,d=>new Date(d.partida_em).toLocaleString('pt-AO',{dateStyle:'medium',timeStyle:'short'})+' · '+Number(d.preco_aoa).toLocaleString('pt-AO')+' Kz','Seleciona uma partida');
+        expressDepartureSelect.disabled=!expressDepartures.length;
+        if(!expressDepartures.length)document.getElementById('express-booking-status').textContent='Esta linha não tem partidas futuras publicadas.';
+        else document.getElementById('express-booking-status').textContent='Escolhe uma partida para consultar as paragens autorizadas.';
+      }
+      expressDepartureSelect.addEventListener('change',async()=>{
+        const departure=expressDepartures.find(d=>d.id===expressDepartureSelect.value);
+        expressBoardingSelect.disabled=true;expressAlightingSelect.disabled=true;expressSeatInput.disabled=true;expressBookButton.disabled=true;
+        if(!departure)return;
+        const {data,error}=await supabaseClient.from('nova_express_stops').select('id,nome,tipo,ordem,embarque_permitido,desembarque_permitido').eq('rota_id',expressSelectedRoute.id).eq('ativo',true).order('ordem');
+        if(error){document.getElementById('express-booking-status').textContent='Não foi possível consultar as paragens autorizadas.';return;}
+        expressStops=data||[];
+        expressSelectOptions(expressBoardingSelect,expressStops.filter(s=>s.embarque_permitido),s=>s.nome+(s.tipo==='terminal'?' · Terminal':' · Paragem'),'Escolhe o embarque');
+        expressSelectOptions(expressAlightingSelect,expressStops.filter(s=>s.desembarque_permitido),s=>s.nome+(s.tipo==='terminal'?' · Terminal':' · Paragem'),'Escolhe o desembarque');
+        expressBoardingSelect.disabled=!expressStops.some(s=>s.embarque_permitido);expressAlightingSelect.disabled=!expressStops.some(s=>s.desembarque_permitido);expressSeatInput.disabled=false;expressBookButton.disabled=false;
+        document.getElementById('express-booking-status').textContent='A lotação será verificada pelo servidor durante a reserva.';
+      });
+      expressBookButton.addEventListener('click',async()=>{
+        const status=document.getElementById('express-booking-status');
+        const {data:sessionData}=await supabaseClient.auth.getSession();
+        if(!sessionData?.session){status.textContent='Inicia sessão com a tua conta de passageiro para reservar.';go('account');return;}
+        const departureId=expressDepartureSelect.value,boardingId=expressBoardingSelect.value,alightingId=expressAlightingSelect.value,seat=document.getElementById('express-seat').value.trim();
+        if(!departureId||!boardingId||!alightingId||!seat){status.textContent='Preenche partida, embarque, desembarque e lugar.';return;}
+        if(boardingId===alightingId){status.textContent='O embarque e o desembarque têm de ser paragens diferentes.';return;}
+        expressBookButton.disabled=true;status.textContent='A solicitar reserva segura ao servidor…';
+        const {data,error}=await supabaseClient.rpc('nova_express_create_booking',{p_departure_id:departureId,p_boarding_stop_id:boardingId,p_alighting_stop_id:alightingId,p_seat_number:seat});
+        expressBookButton.disabled=false;
+        if(error){status.textContent='Reserva não criada: '+(error.message||'o serviço de reservas ainda não está ativo.');return;}
+        const booking=Array.isArray(data)?data[0]:data;
+        if(!booking||!booking.id||!booking.qr_token){status.textContent='O servidor não devolveu um bilhete válido. Contacta o apoio; não consideres a reserva confirmada.';return;}
+        const ticket=document.getElementById('express-ticket');ticket.hidden=false;
+        ticket.innerHTML='<div class="ticket-card"><h3>Bilhete NOVA Express</h3><p>Estado: '+expressEscape(booking.estado||'reservado')+' · Lugar '+expressEscape(booking.lugar||seat)+'</p><div class="ticket-code">'+expressEscape(booking.codigo_bilhete||booking.id)+'</div><div class="ticket-qr" id="express-qr"></div><p>Mostra este código ao operador. A validade depende da confirmação no servidor.</p></div>';
+        if(window.QRCode)new QRCode(document.getElementById('express-qr'),{text:String(booking.qr_token),width:180,height:180});
+        status.textContent='O servidor devolveu a reserva. Confirma o estado e as regras de pagamento antes de embarcar.';
+      });
+      document.getElementById('express-search').addEventListener('click',renderExpressRoutes);
+      const expressAdminPanel=document.getElementById('express-admin-panel');
+      const expressAdminStatus=document.getElementById('express-admin-status');
+      const expressAdminSummary=document.getElementById('express-admin-summary');
+      let expressAdminData={routes:[],stops:[],departures:[]};
+      function adminMessage(message,isError=false){expressAdminStatus.textContent=message;expressAdminStatus.classList.toggle('error',!!isError);}
+      function adminFillRouteSelect(id,placeholder){const sel=document.getElementById(id);sel.innerHTML='<option value="">'+expressEscape(placeholder)+'</option>';expressAdminData.routes.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=(r.codigo||'')+' · '+(r.nome||'')+' ('+(r.ativo?'ativa':'rascunho')+')';sel.appendChild(o);});}
+      async function loadExpressAdmin(){
+        if(!supabaseClient){adminMessage('Supabase indisponível.',true);return;}
+        adminMessage('A verificar autorização administrativa no servidor…');
+        const {data,error}=await supabaseClient.rpc('nova_express_admin_snapshot');
+        if(error){adminMessage(/ADMIN_REQUIRED|42501|permission/i.test((error.message||'')+' '+(error.code||''))?'Acesso reservado a administradores autorizados. A autorização foi recusada pelo servidor.':'Não foi possível carregar a operação: '+(error.message||'erro do servidor'),true);expressAdminSummary.textContent='Os dados operacionais estão protegidos; não foi possível consultá-los.';return;}
+        expressAdminData={routes:data?.routes||[],stops:data?.stops||[],departures:data?.departures||[]};
+        adminFillRouteSelect('xa-stop-route','Seleciona a linha');adminFillRouteSelect('xa-dep-route','Seleciona a linha');
+        expressAdminSummary.innerHTML='<div class="express-admin-item"><strong>'+expressAdminData.routes.length+'</strong> linha(s) · <strong>'+expressAdminData.stops.length+'</strong> terminal/paragem(ns) · <strong>'+expressAdminData.departures.length+'</strong> partida(s)</div>'+expressAdminData.routes.map(r=>'<div class="express-admin-item"><strong>'+expressEscape(r.codigo)+' · '+expressEscape(r.nome)+'</strong><br>'+expressEscape(r.origem_nome)+' → '+expressEscape(r.destino_nome)+'<br>Estado: '+(r.ativo?'publicada':'rascunho')+' · '+expressAdminData.stops.filter(x=>x.rota_id===r.id).length+' paragem(ns) · '+expressAdminData.departures.filter(x=>x.rota_id===r.id).length+' partida(s)</div>').join('');
+        adminMessage('Autorização administrativa confirmada pelo servidor. Pode gerir dados reais.');
+      }
+      async function expressAdminRpc(name,args,success){
+        const buttons=expressAdminPanel.querySelectorAll('button[type="submit"]');buttons.forEach(b=>b.disabled=true);adminMessage('A guardar no Supabase…');
+        try{const {data,error}=await supabaseClient.rpc(name,args);if(error)throw error;adminMessage(success+(data?' ID: '+data:''));await loadExpressAdmin();await loadExpressRoutes();return true;}
+        catch(e){adminMessage('Não foi possível guardar: '+(e.message||'erro do servidor')+'. Confirma os campos e as permissões.',true);return false;}
+        finally{buttons.forEach(b=>b.disabled=false);}
+      }
+      document.getElementById('express-admin-refresh').addEventListener('click',loadExpressAdmin);
+      expressAdminPanel.addEventListener('toggle',()=>{if(expressAdminPanel.open)loadExpressAdmin();});
+      document.getElementById('express-admin-route-form').addEventListener('submit',async e=>{e.preventDefault();if(!supabaseClient)return;await expressAdminRpc('nova_express_admin_save_route',{p_id:null,p_codigo:document.getElementById('xa-route-code').value.trim(),p_nome:document.getElementById('xa-route-name').value.trim(),p_origem_nome:document.getElementById('xa-route-origin').value.trim(),p_destino_nome:document.getElementById('xa-route-destination').value.trim(),p_descricao:document.getElementById('xa-route-description').value.trim(),p_ativo:document.getElementById('xa-route-active').checked},'Linha guardada.');});
+      document.getElementById('express-admin-stop-form').addEventListener('submit',async e=>{e.preventDefault();if(!supabaseClient)return;const lat=document.getElementById('xa-stop-lat').value,lon=document.getElementById('xa-stop-lon').value;if((lat&&!lon)||(!lat&&lon)){adminMessage('Preenche latitude e longitude juntas ou deixa ambas vazias.',true);return;}await expressAdminRpc('nova_express_admin_save_stop',{p_id:null,p_rota_id:document.getElementById('xa-stop-route').value,p_nome:document.getElementById('xa-stop-name').value.trim(),p_tipo:document.getElementById('xa-stop-type').value,p_ordem:Number(document.getElementById('xa-stop-order').value),p_latitude:lat?Number(lat):null,p_longitude:lon?Number(lon):null,p_ativo:document.getElementById('xa-stop-active').checked,p_embarque_permitido:document.getElementById('xa-stop-board').checked,p_desembarque_permitido:document.getElementById('xa-stop-alight').checked},'Paragem guardada.');});
+      document.getElementById('express-admin-departure-form').addEventListener('submit',async e=>{e.preventDefault();if(!supabaseClient)return;const time=document.getElementById('xa-dep-time').value,arrival=document.getElementById('xa-dep-arrival').value;if(!time){adminMessage('Indica a data e hora de partida.',true);return;}await expressAdminRpc('nova_express_admin_save_departure',{p_id:null,p_rota_id:document.getElementById('xa-dep-route').value,p_partida_em:new Date(time).toISOString(),p_chegada_prevista:arrival?new Date(arrival).toISOString():null,p_preco_aoa:Number(document.getElementById('xa-dep-price').value),p_lugares_total:Number(document.getElementById('xa-dep-seats').value),p_estado:document.getElementById('xa-dep-state').value},'Partida guardada.');});
+      const SUPABASE_URL='https://vgbnnikfsmprcpvtypuh.supabase.co';
+      const SUPABASE_PUBLISHABLE_KEY='sb_publishable_qCs2fRvNoGJhopd2LDom6Q_qL2AJbwp';
+      const status=document.getElementById('account-status');
+      const logoutButton=document.getElementById('logout-button');
+      let supabaseClient=null;
+      try {
+        if(window.supabase && typeof window.supabase.createClient==='function') {
+          supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
+            auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+          });
+          status.textContent='Ligação configurada. Podes entrar ou criar uma conta real.';
+        } else {
+          status.textContent='Não foi possível carregar a biblioteca de autenticação. Verifica a ligação à internet e volta a abrir a página.';
+        }
+      } catch(e) {
+        status.textContent='Não foi possível inicializar a autenticação. Revê a configuração antes de tentar novamente.';
+      }
+      // Histórico real do passageiro e criação de intenção de pagamento via Edge Function.
+      let passengerCompletedRides=[];
+      let paymentRequestInProgress=false;
+      function paymentText(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+      function paymentMessage(message){const node=document.getElementById('payment-status');if(node)node.textContent=message;}
+      async function loadPassengerActivity(){
+        const statusNode=document.getElementById('activity-status');
+        const listNode=document.getElementById('completed-rides-list');
+        const controls=document.getElementById('payment-controls');
+        const refresh=document.getElementById('activity-refresh');
+        if(!statusNode||!listNode||!controls)return;
+        if(!supabaseClient){statusNode.textContent='A biblioteca Supabase não está disponível. Verifica a ligação à internet.';return;}
+        if(refresh){refresh.disabled=true;refresh.textContent='A atualizar…';}
+        statusNode.textContent='A consultar as viagens da tua conta…';
+        listNode.replaceChildren();
+        controls.hidden=true;
+        try{
+          const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+          if(sessionError)throw sessionError;
+          const user=sessionData?.session?.user;
+          if(!user){
+            statusNode.textContent='Inicia sessão para consultar o histórico e os pagamentos.';
+            const button=document.createElement('button');button.type='button';button.className='primary';button.textContent='Entrar na NOVA';button.dataset.go='account';listNode.appendChild(button);
+            return;
+          }
+          const {data,error}=await supabaseClient.from('nova_taxi_rides')
+            .select('id,categoria,origem_texto,destino_texto,estado,valor_final,valor_estimado,criado_em')
+            .eq('passageiro_id',user.id).order('criado_em',{ascending:false}).limit(30);
+          if(error)throw error;
+          const rides=Array.isArray(data)?data:[];
+          passengerCompletedRides=rides.filter(r=>String(r.estado||'').toLowerCase()==='concluida');
+          if(!rides.length){
+            statusNode.textContent='Ainda não existem viagens registadas nesta conta.';
+            return;
+          }
+          statusNode.textContent='Histórico carregado do Supabase: '+rides.length+' viagem(ns).';
+          rides.forEach(r=>{
+            const card=document.createElement('article');card.className='payment-ride-card';
+            const title=document.createElement('strong');
+            title.textContent=String(r.categoria||'Viagem').toUpperCase()+' · '+(r.estado||'Estado não indicado');
+            const details=document.createElement('p');
+            const amount=r.valor_final??r.valor_estimado;
+            const amountText=amount==null?'Valor por confirmar':Number(amount).toLocaleString('pt-AO')+' AOA';
+            const when=r.criado_em?new Date(r.criado_em).toLocaleString('pt-AO',{dateStyle:'short',timeStyle:'short'}):'Data não disponível';
+            details.textContent=(r.origem_texto||'Origem não indicada')+' → '+(r.destino_texto||'Destino não indicado')+' · '+amountText+' · '+when;
+            card.append(title,details);listNode.appendChild(card);
+          });
+          const payable=passengerCompletedRides.filter(r=>Number(r.valor_final??r.valor_estimado??0)>0);
+          const select=document.getElementById('payment-ride-select');
+          select.replaceChildren();
+          const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Seleciona uma viagem concluída';select.appendChild(placeholder);
+          payable.forEach(r=>{
+            const option=document.createElement('option');option.value=String(r.id);
+            option.textContent=String(r.categoria||'Viagem')+' · '+Number(r.valor_final??r.valor_estimado).toLocaleString('pt-AO')+' AOA · '+String(r.id).slice(0,8);
+            select.appendChild(option);
+          });
+          controls.hidden=false;
+          if(payable.length){
+            select.value=String(payable[0].id);
+            paymentMessage('Seleciona a forma de pagamento. O servidor valida a viagem e o estado do pagamento.');
+          }else{
+            paymentMessage('Não há viagens concluídas com valor positivo para iniciar pagamento.');
+          }
+          const canPay=payable.length>0;
+          document.getElementById('pay-express-button').disabled=!canPay;
+          document.getElementById('pay-reference-button').disabled=!canPay;
+          document.getElementById('payment-mobile').disabled=!canPay;
+        }catch(error){
+          statusNode.textContent='Não foi possível carregar o histórico: '+(error?.message||'erro desconhecido')+'. Confirma a sessão e as políticas RLS.';
+        }finally{
+          if(refresh){refresh.disabled=false;refresh.textContent='↻ Atualizar histórico';}
+        }
+      }
+      async function startPassengerPayment(method){
+        if(paymentRequestInProgress)return;
+        if(!supabaseClient){paymentMessage('Pagamento indisponível: a ligação Supabase não carregou.');return;}
+        const rideId=document.getElementById('payment-ride-select').value;
+        if(!rideId){paymentMessage('Seleciona uma viagem concluída antes de continuar.');return;}
+        const mobile=document.getElementById('payment-mobile').value.replace(/\D/g,'');
+        if(method==='multicaixa_express'&&!/^9\d{8}$/.test(mobile)){paymentMessage('Introduz um número Multicaixa Express válido com 9 dígitos, começado por 9.');return;}
+        paymentRequestInProgress=true;
+        const expressButton=document.getElementById('pay-express-button');
+        const referenceButton=document.getElementById('pay-reference-button');
+        expressButton.disabled=true;referenceButton.disabled=true;
+        paymentMessage('A solicitar instruções de pagamento ao servidor…');
+        try{
+          const body={ride_id:rideId,payment_method:method};
+          if(method==='multicaixa_express')body.mobile=mobile;
+          const {data,error}=await supabaseClient.functions.invoke('nova-taxi-create-payment-intent',{body});
+          if(error)throw error;
+          const payment=data?.payment||{};
+          const entity=payment.entidade_referencia||'';
+          const reference=payment.numero_referencia||'';
+          const state=payment.estado||'por confirmar';
+          if(entity||reference){
+            paymentMessage('Pedido recebido em sandbox. Estado: '+state+'.'+(entity?' Entidade: '+entity+'.':'')+(reference?' Referência: '+reference+'.':'')+' O pagamento só fica confirmado após validação do webhook. Não repitas o pedido se o estado for incerto.');
+          }else if(data?.status===202||data?.code===202){
+            paymentMessage('Estado do pagamento desconhecido. Não cries outro pedido; atualiza o histórico e confirma a mesma tentativa com o suporte.');
+          }else{
+            paymentMessage('O servidor recebeu a resposta, mas não devolveu referência. Estado não confirmado. '+String(data?.error||data?.message||'Verifica o estado no backend antes de tentar novamente.'));
+          }
+        }catch(error){
+          paymentMessage('Não foi possível confirmar a criação do pedido: '+(error?.message||'erro de ligação')+'. Não assumas que o pagamento foi criado nem repitas sem verificar o estado.');
+        }finally{
+          paymentRequestInProgress=false;
+          expressButton.disabled=false;referenceButton.disabled=false;
+        }
+      }
+      document.getElementById('activity-refresh').addEventListener('click',loadPassengerActivity);
+      document.getElementById('pay-express-button').addEventListener('click',()=>startPassengerPayment('multicaixa_express'));
+      document.getElementById('pay-reference-button').addEventListener('click',()=>startPassengerPayment('multicaixa_reference'));
+
+      let driverLoadInProgress=false;
+      const driverStatusLabels={solicitada:'Solicitada',ofertada:'Ofertada',aceita:'Aceite',motorista_chegando:'A caminho da recolha',em_curso:'Em curso',concluida:'Concluída',cancelada:'Cancelada'};
+      function driverMessage(id,message){const node=document.getElementById(id);if(node)node.textContent=message;}
+      function escapeDriverText(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+      function driverEmpty(title,detail){return '<div class="driver-empty"><strong>'+escapeDriverText(title)+'</strong>'+escapeDriverText(detail)+'</div>';}
+      async function loadDriverDashboard(){
+        if(driverLoadInProgress)return;
+        driverLoadInProgress=true;
+        const refresh=document.getElementById('driver-refresh');if(refresh){refresh.disabled=true;refresh.textContent='A atualizar…';}
+        driverMessage('driver-account-state','A verificar…');driverMessage('driver-status-message','A consultar a tua conta no Supabase.');
+        try{
+          if(!supabaseClient)throw new Error('A ligação ao Supabase não está disponível.');
+          const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+          if(sessionError)throw sessionError;
+          const user=sessionData?.session?.user;
+          if(!user){
+            driverMessage('driver-account-state','Sessão necessária');driverMessage('driver-state-pill','Desligado');
+            document.getElementById('driver-state-pill').className='driver-pill';
+            driverMessage('driver-status-message','Entra com a tua conta de motorista para consultar aprovação, veículo e corridas.');
+            document.getElementById('driver-work-state').innerHTML='<span class="driver-work-icon">🔐</span><div><strong>Inicia sessão</strong><p>Usa o teu e-mail e palavra-passe e seleciona o perfil Motorista.</p><button class="secondary" data-go="account">Entrar na NOVA</button></div>';
+            document.getElementById('driver-active-count').textContent='—';document.getElementById('driver-vehicle-count').textContent='—';
+            document.getElementById('driver-rides-list').innerHTML=driverEmpty('Sessão não iniciada','Entra para ver as corridas associadas à tua conta.');
+            document.getElementById('driver-vehicles-list').innerHTML=driverEmpty('Veículos não carregados','A lista será apresentada depois de validares a sessão.');
+            return;
+          }
+          const {data:profile,error:profileError}=await supabaseClient.from('nova_taxi_profiles').select('id,tipo_utilizador,nome,ativo').eq('id',user.id).maybeSingle();
+          if(profileError)throw new Error('Não foi possível ler o perfil: '+profileError.message);
+          if(!profile || profile.tipo_utilizador!=='motorista'){
+            driverMessage('driver-account-state','Perfil de motorista necessário');driverMessage('driver-state-pill','Perfil inválido');
+            document.getElementById('driver-state-pill').className='driver-pill inactive';
+            driverMessage('driver-status-message','Esta sessão não está associada a um perfil de motorista NOVA. Sai e entra com a conta correta ou cria um perfil Motorista.');
+            document.getElementById('driver-work-state').innerHTML='<span class="driver-work-icon">👤</span><div><strong>Conta não reconhecida como motorista</strong><p>Por segurança, o painel não carrega corridas de outro tipo de perfil.</p><button class="secondary" data-go="account">Ver conta</button></div>';
+            document.getElementById('driver-rides-list').innerHTML=driverEmpty('Sem corridas','É necessário um perfil de motorista válido.');document.getElementById('driver-vehicles-list').innerHTML=driverEmpty('Sem veículos','É necessário um perfil de motorista válido.');
+            return;
+          }
+          driverMessage('driver-greeting',profile.nome?'Olá, '+profile.nome+'. Vamos acompanhar a tua jornada.':'Bem-vindo à tua jornada NOVA.');
+          if(profile.ativo!==true){
+            driverMessage('driver-account-state','Conta inativa');driverMessage('driver-state-pill','Inativa');document.getElementById('driver-state-pill').className='driver-pill inactive';
+            driverMessage('driver-status-message','A conta está marcada como inativa. Contacta a administração NOVA para rever o acesso.');
+          }
+          const {data:driver,error:driverError}=await supabaseClient.from('nova_taxi_driver_profiles').select('disponivel,aprovado').eq('id',user.id).maybeSingle();
+          if(driverError)throw new Error('Não foi possível ler o estado do motorista: '+driverError.message);
+          if(!driver){driverMessage('driver-account-state','Perfil de condução pendente');driverMessage('driver-state-pill','Em preparação');document.getElementById('driver-state-pill').className='driver-pill pending';driverMessage('driver-status-message','O perfil de condução ainda não foi criado. A administração precisa de validar o registo.');}
+          else if(profile.ativo!==true){/* A mensagem de conta inativa tem prioridade. */}
+          else if(driver.aprovado!==true){driverMessage('driver-account-state','A aguardar aprovação');driverMessage('driver-state-pill','Pendente');document.getElementById('driver-state-pill').className='driver-pill pending';driverMessage('driver-status-message','O teu registo está guardado. A administração precisa de aprovar o motorista antes de receber corridas.');}
+          else if(driver.disponivel===true){driverMessage('driver-account-state','Disponível no sistema');driverMessage('driver-state-pill','Online');document.getElementById('driver-state-pill').className='driver-pill approved';driverMessage('driver-status-message','O Supabase indica que estás disponível. Mantém a localização e o estado atualizados quando começares a trabalhar.');}
+          else{driverMessage('driver-account-state','Aprovado · Offline');driverMessage('driver-state-pill','Offline');document.getElementById('driver-state-pill').className='driver-pill';driverMessage('driver-status-message','A conta está aprovada, mas a disponibilidade está desligada. O controlo de entrada online será ativado após a revisão de segurança das políticas.');}
+          const {data:rides,error:ridesError}=await supabaseClient.from('nova_taxi_rides').select('id,categoria,origem_texto,destino_texto,estado,valor_estimado,valor_final,criado_em').eq('motorista_id',user.id).order('criado_em',{ascending:false}).limit(10);
+          if(ridesError){driverMessage('driver-active-count','—');document.getElementById('driver-rides-list').innerHTML=driverEmpty('Não foi possível carregar as corridas',ridesError.message);}
+          else{
+            const active=(rides||[]).filter(r=>['aceita','motorista_chegando','em_curso'].includes(r.estado));driverMessage('driver-active-count',String(active.length));
+            document.getElementById('driver-rides-list').innerHTML=(rides||[]).length?(rides||[]).map(r=>{
+              const state=driverStatusLabels[r.estado]||r.estado||'Estado desconhecido';
+              const fare=r.valor_final??r.valor_estimado;
+              const fareText=fare==null?'Valor por confirmar':Number(fare).toLocaleString('pt-AO')+' Kz';
+              const date=r.criado_em?new Date(r.criado_em).toLocaleString('pt-AO',{dateStyle:'short',timeStyle:'short'}):'Data não disponível';
+              return '<article class="driver-ride-card"><div class="driver-ride-top"><strong>'+escapeDriverText(String(r.categoria||'Corrida').toUpperCase())+'</strong><span class="driver-ride-state">'+escapeDriverText(state)+'</span></div><div class="driver-ride-route">🟠 '+escapeDriverText(r.origem_texto||'Origem não indicada')+'<br>⚫ '+escapeDriverText(r.destino_texto||'Destino não indicado')+'</div><div class="driver-ride-meta"><span>'+escapeDriverText(date)+'</span><strong>'+escapeDriverText(fareText)+'</strong></div></article>';
+            }).join(''):driverEmpty('Ainda sem corridas atribuídas','Quando uma corrida estiver associada a esta conta, aparecerá aqui.');
+          }
+          const {data:vehicles,error:vehiclesError}=await supabaseClient.from('nova_taxi_vehicles').select('marca,modelo,matricula,cor,categoria,ativo').eq('motorista_id',user.id).order('criado_em',{ascending:false}).limit(5);
+          if(vehiclesError){driverMessage('driver-vehicle-count','—');document.getElementById('driver-vehicles-list').innerHTML=driverEmpty('Veículos indisponíveis',vehiclesError.message);}
+          else{driverMessage('driver-vehicle-count',String((vehicles||[]).length));document.getElementById('driver-vehicles-list').innerHTML=(vehicles||[]).length?(vehicles||[]).map(v=>'<article class="driver-vehicle-card"><strong>'+escapeDriverText([v.marca,v.modelo].filter(Boolean).join(' ')||'Veículo registado')+'</strong><p>Matrícula: '+escapeDriverText(v.matricula||'Não indicada')+' · Categoria: '+escapeDriverText(v.categoria||'Não definida')+' · '+(v.ativo?'Ativo':'Inativo')+'</p></article>').join(''):driverEmpty('Nenhum veículo registado','O veículo será mostrado aqui depois de ser registado e validado pela administração.');}
+          const work=document.getElementById('driver-work-state');
+          if(!profile.ativo){work.innerHTML='<span class="driver-work-icon">⛔</span><div><strong>Conta inativa</strong><p>Não podes iniciar a jornada enquanto o acesso estiver inativo.</p></div>';}
+          else if(!driver||driver.aprovado!==true){work.innerHTML='<span class="driver-work-icon">📝</span><div><strong>Completa a aprovação</strong><p>Confirma os documentos e os dados do veículo com a administração. As corridas não serão ativadas antes da aprovação.</p></div>';}
+          else if(driver.disponivel===true){work.innerHTML='<span class="driver-work-icon">🟢</span><div><strong>Disponibilidade registada</strong><p>O estado no backend está online. A lista abaixo mostra apenas corridas já atribuídas à tua conta.</p></div>';}
+          else{work.innerHTML='<span class="driver-work-icon">🌙</span><div><strong>Estás offline</strong><p>O teu perfil está aprovado. A ativação do botão “Ficar online” fica pendente até reforçarmos a política RLS de aprovação no backend.</p></div>';}
+        }catch(error){
+          const msg=error?.message||'Erro desconhecido';driverMessage('driver-account-state','Não foi possível carregar');driverMessage('driver-state-pill','Erro');document.getElementById('driver-state-pill').className='driver-pill inactive';driverMessage('driver-status-message',msg);
+          document.getElementById('driver-work-state').innerHTML='<span class="driver-work-icon">⚠️</span><div><strong>Falha ao carregar o painel</strong><p>'+escapeDriverText(msg)+'</p></div>';
+          document.getElementById('driver-rides-list').innerHTML=driverEmpty('Corridas não carregadas','Atualiza o painel depois de verificar a ligação e as políticas de acesso.');document.getElementById('driver-vehicles-list').innerHTML=driverEmpty('Veículos não carregados','Não foi possível confirmar os veículos no Supabase.');
+        }finally{driverLoadInProgress=false;if(refresh){refresh.disabled=false;refresh.textContent='↻ Atualizar painel';}}
+      }
+      document.getElementById('driver-refresh').addEventListener('click',loadDriverDashboard);
+      document.getElementById('driver-vehicle-help').addEventListener('click',()=>{driverMessage('driver-vehicle-status','O registo de veículos ainda não está ligado a um formulário validado. Não foram gravados dados. Contacta a administração para adicionar marca, modelo, matrícula e categoria após confirmar os documentos.');});
+      async function loadFareRules(){
+        if(!supabaseClient)return;
+        const price=document.getElementById('summary-price');
+        try{
+          const {data,error}=await supabaseClient.from('nova_taxi_fare_rules').select('categoria,tarifa_base,preco_minimo,preco_por_km,preco_por_minuto,km_incluidos,minutos_incluidos').eq('ativa',true);
+          if(error)throw error;
+          fareRules={};(data||[]).forEach(item=>{if(item.categoria)fareRules[String(item.categoria).trim().toLowerCase()]=item;});
+          updateFareDisplay();
+          if(!(data||[]).length && price)price.textContent='Tarifas ainda não configuradas';
+        }catch(error){
+          if(price)price.textContent='Tarifa indisponível';
+          const note=document.getElementById('summary-service-note');
+          if(note)note.textContent='Não foi possível carregar a tarifa oficial. O preço não será inventado.';
+          console.warn('NOVA Táxi: falha ao carregar tarifas ativas.',error);
+        }
+      }
+      loadFareRules();
+      function showError(error) {
+        const message=(error && error.message) ? error.message : 'O serviço não devolveu uma explicação. Tenta novamente.';
+        status.textContent='Não foi possível concluir: '+message;
+      }
+      async function authAction(action){
+        if(!supabaseClient){status.textContent='Autenticação indisponível: a biblioteca Supabase não carregou.';return;}
+        const email=document.getElementById('email').value.trim();
+        const password=document.getElementById('password').value;
+        const fullName=document.getElementById('full-name').value.trim();
+        if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){status.textContent='Introduz um endereço de e-mail válido.';return;}
+        if(password.length<6){status.textContent='A palavra-passe deve ter pelo menos 6 caracteres.';return;}
+        if(action==='register' && !fullName){status.textContent='Introduz o teu nome para criar a conta.';return;}
+        const roleValue=role.toLowerCase()==='motorista'?'motorista':'passageiro';
+        const loginButton=document.getElementById('login-button');
+        const registerButton=document.getElementById('register-button');
+        loginButton.disabled=true;registerButton.disabled=true;
+        status.textContent=action==='register'?'A enviar o registo ao Supabase…':'A validar as credenciais no Supabase…';
+        try {
+          if(action==='register') {
+            const {data,error}=await supabaseClient.auth.signUp({
+              email,password,
+              options:{data:{tipo_utilizador:roleValue,role:roleValue,user_type:roleValue,nome:fullName,full_name:fullName}}
+            });
+            if(error) throw error;
+            if(data.session) {
+              const {data:profileData,error:profileError}=await supabaseClient.from('nova_taxi_profiles').select('tipo_utilizador,nome,ativo').eq('id',data.user.id).maybeSingle();
+              logoutButton.hidden=false;
+              if(profileError) {
+                status.textContent='Conta criada e sessão iniciada, mas a leitura do perfil falhou. Verifica as políticas RLS de nova_taxi_profiles.';
+              } else if(!profileData) {
+                status.textContent='A conta foi criada, mas o perfil não apareceu em nova_taxi_profiles. O trigger nova_taxi_auth_user_profile deve ser investigado.';
+              } else {
+                status.textContent='Conta criada. Perfil: '+profileData.tipo_utilizador+'.'+(profileData.tipo_utilizador==='motorista'?' O motorista aguarda aprovação.':'');
+                if(profileData.tipo_utilizador==='motorista')setTimeout(()=>go('driver'),120);
+              }
+            } else {
+              status.textContent='Registo aceite pelo Supabase. Confirma o e-mail recebido antes de entrar. Se não chegar, verifica Spam e as definições de confirmação de e-mail do projeto.';
+            }
+          } else {
+            const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+            if(error) throw error;
+            const {data:profileData,error:profileError}=await supabaseClient.from('nova_taxi_profiles').select('tipo_utilizador,nome,ativo').eq('id',data.user.id).maybeSingle();
+            if(profileError) {
+              status.textContent='Sessão iniciada, mas não foi possível ler o perfil. Verifica as políticas RLS de nova_taxi_profiles.';
+            } else if(!profileData) {
+              status.textContent='Sessão iniciada, mas o perfil NOVA Táxi não existe. O trigger de criação de perfil precisa de ser investigado.';
+            } else {
+              status.textContent='Sessão iniciada. Perfil: '+profileData.tipo_utilizador+'.'+(profileData.ativo===false?' A conta está inativa.':'');
+              if(profileData.tipo_utilizador==='motorista')setTimeout(()=>go('driver'),120);
+            }
+            logoutButton.hidden=false;
+          }
+        } catch(error) { showError(error); }
+        finally {loginButton.disabled=false;registerButton.disabled=false;}
+      }
+      document.getElementById('login-button').addEventListener('click',()=>authAction('login'));
+      document.getElementById('register-button').addEventListener('click',()=>authAction('register'));
+      logoutButton.addEventListener('click',async()=>{
+        if(!supabaseClient)return;
+        logoutButton.disabled=true;
+        try{
+          const {error}=await supabaseClient.auth.signOut();
+          if(error)throw error;
+          logoutButton.hidden=true;
+          status.textContent='Sessão terminada neste dispositivo.';
+        }catch(error){showError(error);}
+        finally{logoutButton.disabled=false;}
+      });
+      if(supabaseClient){
+        loadExpressRoutes();
+        supabaseClient.auth.getSession().then(({data,error})=>{
+          if(error){showError(error);return;}
+          if(data.session){logoutButton.hidden=false;status.textContent='Já existe uma sessão iniciada. Podes continuar com a tua conta.';}
+        }).catch(showError);
+      }
+    })();
+  </script>
+</body>
+</html>
