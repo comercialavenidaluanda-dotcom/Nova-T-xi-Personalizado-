@@ -1,0 +1,89 @@
+name: NOVA Táxi — APK de produção para grupo-piloto
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-signed-release:
+    name: Build, sign and verify pilot APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Check signing secrets are configured
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in KEYSTORE_B64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Falta configurar um segredo de assinatura Android no GitHub: ${name}."
+              missing=1
+            fi
+          done
+          if [[ "$missing" -ne 0 ]]; then
+            echo "Configure os quatro segredos nas definições do repositório. Não coloque a chave no código nem nos logs."
+            exit 1
+          fi
+
+      - name: Build unsigned release APK
+        run: gradle -p android :app:assembleRelease --no-daemon
+
+      - name: Align, sign and verify APK
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          BUILD_TOOLS="$(find "$SDK/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          test -x "$BUILD_TOOLS/zipalign"
+          test -x "$BUILD_TOOLS/apksigner"
+          INPUT="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          test -f "$INPUT"
+          KEYSTORE="$RUNNER_TEMP/nova-taxi-release.keystore"
+          ALIGNED="$RUNNER_TEMP/nova-taxi-release-aligned.apk"
+          OUTPUT="$RUNNER_TEMP/nova-taxi-pilot-release.apk"
+          umask 077
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$KEYSTORE"
+          "$BUILD_TOOLS/zipalign" -f -p 4 "$INPUT" "$ALIGNED"
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$KEYSTORE" \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass env:KEYSTORE_PASSWORD \
+            --key-pass env:KEY_PASSWORD \
+            --out "$OUTPUT" "$ALIGNED"
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$OUTPUT"
+          echo "APK assinado e verificado; não foi publicado numa loja."
+          rm -f "$KEYSTORE" "$ALIGNED"
+
+      - name: Upload signed pilot APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-taxi-pilot-release-signed
+          path: ${{ runner.temp }}/nova-taxi-pilot-release.apk
+          if-no-files-found: error
+          retention-days: 14
